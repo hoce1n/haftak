@@ -14,7 +14,13 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PlannerProvider, usePlanner } from "@/lib/planner-store";
-import { DAY_NAMES, addDays, formatJalali, persianDayIndex, startOfPersianWeek } from "@/lib/jalali";
+import {
+  DAY_NAMES,
+  addDays,
+  formatJalali,
+  persianDayIndex,
+  startOfPersianWeek,
+} from "@/lib/jalali";
 import type { WeekPlan } from "@/lib/planner-types";
 import { cn } from "@/lib/utils";
 
@@ -145,9 +151,7 @@ function Planner() {
           onShiftWeek={(weeks) => planner.setWeekStart(addDays(weekStart, weeks * 7))}
           onToday={() => planner.setWeekStart(startOfPersianWeek(new Date()))}
           onClearWeek={handleClearWeek}
-          onThemeToggle={() =>
-            planner.setTheme(data.settings.theme === "dark" ? "light" : "dark")
-          }
+          onThemeToggle={() => planner.setTheme(data.settings.theme === "dark" ? "light" : "dark")}
           onPrint={() => window.print()}
           onExport={handleExport}
           onImport={handleImport}
@@ -177,7 +181,7 @@ function Planner() {
 
         <QuoteStrip quotes={data.settings.quotes} onQuotesChange={planner.setQuotes} />
 
-        <div className="grid gap-4 lg:grid-cols-[16rem_minmax(0,1fr)_15rem]">
+        <div className="planner-layout grid gap-4 lg:grid-cols-[16rem_minmax(0,1fr)_15rem]">
           <aside className="no-print hidden flex-col gap-4 lg:flex">{sidePanels}</aside>
 
           <main className="print-area min-w-0 rounded-xl border bg-card/60 p-3 shadow-xs">
@@ -240,7 +244,9 @@ function Planner() {
       <Sheet open={mobilePanel !== null} onOpenChange={(open) => !open && setMobilePanel(null)}>
         <SheetContent side="left" className="w-full overflow-y-auto sm:max-w-sm">
           <SheetHeader>
-            <SheetTitle>{mobilePanel === "tiles" ? "کاشی‌های آماده" : "تقویم و توازن هفته"}</SheetTitle>
+            <SheetTitle>
+              {mobilePanel === "tiles" ? "کاشی‌های آماده" : "تقویم و توازن هفته"}
+            </SheetTitle>
           </SheetHeader>
           <div className="space-y-4 px-4 pb-6">
             {mobilePanel === "tiles" ? (
