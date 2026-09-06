@@ -51,7 +51,7 @@ Responsive behaviour: desktop keeps the three-area layout; tablet collapses the 
 Same simple shape as the prototype, with three changes worth making:
 
 - Activities are keyed by week, so `weekStart` (the Saturday, stored as a plain date) joins day index, slot index, subject, topic, duration, details, category/colour, and done flag. Today's prototype has a single global task list, which silently overwrites the plan when the week changes.
-- Slot titles carry an optional start and end time, so hours can be derived and displayed properly while still allowing free-text names.
+- Each of the 10 fixed slots carries an editable title plus a real start and end time, so slot length is known; an activity's own duration stays independent of it (a 60-minute activity can sit in a 90-minute slot), and planned hours come from activity durations.
 - Settings (student name, slot titles, tiles, quotes, theme) are separated from week data, so clearing a week never touches the library or preferences.
 
 Stored data is versioned, and existing prototype data in the browser is migrated into the new shape on first load rather than dropped.
