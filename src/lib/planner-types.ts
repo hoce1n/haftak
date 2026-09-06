@@ -1,4 +1,5 @@
 export const CATEGORIES = ["study", "review", "test", "memorize"] as const;
+import { toPersianDigits } from "./jalali";
 
 export type Category = (typeof CATEGORIES)[number];
 
@@ -80,7 +81,7 @@ const SLOT_TIMES: Array<[string, string]> = [
 export function defaultSlots(): Slot[] {
   return SLOT_TIMES.map(([start, end], i) => ({
     id: `slot-${i + 1}`,
-    title: `پارت ${i + 1}`,
+    title: `پارت ${toPersianDigits(i + 1)}`,
     start,
     end,
   }));
