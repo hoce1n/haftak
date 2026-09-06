@@ -48,7 +48,7 @@ export function toJalali(gy: number, gm: number, gd: number): JalaliDate {
     Math.floor((year2 + 399) / 400) -
     80 +
     gd;
-  for (let i = 0; i < gm; i++) days += GREGORIAN_MONTH_DAYS[i];
+  for (let i = 0; i < gm; i++) days += GREGORIAN_MONTH_DAYS[i] ?? 0;
 
   jy += 33 * Math.floor(days / 12053);
   days %= 12053;
@@ -91,8 +91,9 @@ export function toGregorian(jy: number, jm: number, jd: number): Date {
   monthDays[2] = isGregorianLeap(gy) ? 29 : 28;
   let gm = 0;
   for (gm = 1; gm <= 12; gm++) {
-    if (gd <= monthDays[gm]) break;
-    gd -= monthDays[gm];
+    const len = monthDays[gm] ?? 30;
+    if (gd <= len) break;
+    gd -= len;
   }
   return new Date(gy, gm - 1, gd, 12, 0, 0, 0);
 }
@@ -104,14 +105,8 @@ export function jalaliMonthLength(jy: number, jm: number) {
 }
 
 export function isJalaliLeap(jy: number) {
-  // 33-year cycle remainders that mark leap years.
-  const r = ((jy - 474) % 2820) % 128;
-  const breaks = [1, 5, 9, 13, 17, 22, 26, 30];
-  const mod = jy % 33;
-  if ([1, 5, 9, 13, 17, 22, 26, 30].includes(mod)) return true;
-  void r;
-  void breaks;
-  return false;
+  // Leap years fall on these remainders of the 33-year cycle.
+  return [1, 5, 9, 13, 17, 22, 26, 30].includes(jy % 33);
 }
 
 export function dateToJalali(date: Date): JalaliDate {
@@ -143,7 +138,7 @@ export function dateKey(date: Date) {
 }
 
 export function keyToDate(key: string) {
-  const [y, m, d] = key.split("-").map(Number);
+  const [y = 1970, m = 1, d = 1] = key.split("-").map(Number);
   return new Date(y, m - 1, d, 12, 0, 0, 0);
 }
 
@@ -154,7 +149,7 @@ export function isSameDay(a: Date, b: Date) {
 const PERSIAN_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
 
 export function toPersianDigits(value: string | number) {
-  return String(value).replace(/\d/g, (d) => PERSIAN_DIGITS[Number(d)]);
+  return String(value).replace(/\d/g, (d) => PERSIAN_DIGITS[Number(d)] ?? d);
 }
 
 export function formatJalali(date: Date, opts: { withYear?: boolean } = {}) {
