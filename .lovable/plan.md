@@ -41,7 +41,7 @@ Responsive behaviour: desktop keeps the three-area layout; tablet collapses the 
 - Per-day totals under each column, plus a subject-level breakdown of the week so a student can see imbalance at a glance
 - Undo after delete and after clearing the week, and a confirmation before clearing
 - Clearer empty states: an empty week explains how to start
-- Colours get meaning (study / review / test / memorise / rest) with a legend, instead of being an anonymous swatch row
+- Four fixed categories — study, review, test, memorise — shown as subtle, visually distinct accents with a small legend, instead of an anonymous swatch row
 - Keyboard and screen-reader support on the grid and the panels
 - Weeks are remembered separately, so moving to another week keeps each week's plan instead of overwriting one shared plan
 - Light and dark theme
