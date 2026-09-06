@@ -41,7 +41,7 @@ Responsive behaviour: desktop keeps the three-area layout; tablet collapses the 
 - Per-day totals under each column, plus a subject-level breakdown of the week so a student can see imbalance at a glance
 - Undo after delete and after clearing the week, and a confirmation before clearing
 - Clearer empty states: an empty week explains how to start
-- Colours get meaning (study / review / test / memorise / rest) with a legend, instead of being an anonymous swatch row
+- Four fixed categories — study, review, test, memorise — shown as subtle, visually distinct accents with a small legend, instead of an anonymous swatch row
 - Keyboard and screen-reader support on the grid and the panels
 - Weeks are remembered separately, so moving to another week keeps each week's plan instead of overwriting one shared plan
 - Light and dark theme
@@ -51,7 +51,7 @@ Responsive behaviour: desktop keeps the three-area layout; tablet collapses the 
 Same simple shape as the prototype, with three changes worth making:
 
 - Activities are keyed by week, so `weekStart` (the Saturday, stored as a plain date) joins day index, slot index, subject, topic, duration, details, category/colour, and done flag. Today's prototype has a single global task list, which silently overwrites the plan when the week changes.
-- Slot titles carry an optional start and end time, so hours can be derived and displayed properly while still allowing free-text names.
+- Each of the 10 fixed slots carries an editable title plus a real start and end time, so slot length is known; an activity's own duration stays independent of it (a 60-minute activity can sit in a 90-minute slot), and planned hours come from activity durations.
 - Settings (student name, slot titles, tiles, quotes, theme) are separated from week data, so clearing a week never touches the library or preferences.
 
 Stored data is versioned, and existing prototype data in the browser is migrated into the new shape on first load rather than dropped.
@@ -84,9 +84,10 @@ Stored data is versioned, and existing prototype data in the browser is migrated
 9. PDF/print output
 10. Responsive passes for tablet and phone, accessibility pass
 
-## Questions before I build
+## Decisions now settled
 
-1. Time slots: keep them as free-text "Hour 1…10", or give each slot a real start/end time so hours are computed automatically? Should the number of slots be adjustable?
-2. Activity categories: is study / review / test / memorise / rest the right fixed set for colours, or do you want to define your own labels?
-3. Should past weeks stay browsable as history, or does the app only ever show the selected week with no archive view?
-4. Visual direction: pick a calm palette and typeface yourself, or do you want to see a couple of design options first?
+- 10 fixed slots for V1, each with an editable title and editable start/end time; activity duration independent of slot length
+- Four fixed categories: study, review, test, memorise — subtle, no custom categories yet
+- Past and future weeks browsable through the Jalali calendar, each week stored separately; no separate history page
+- Visual direction chosen by me: calm, minimal, modern, focused, strong RTL typography, no gradient or dashboard noise
+- Single user, saved in the browser, no login
