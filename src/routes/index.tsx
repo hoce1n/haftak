@@ -242,6 +242,8 @@ function Planner() {
 
         <QuoteStrip quotes={data.settings.quotes} onQuotesChange={planner.setQuotes} />
 
+        <div className="planner-layout grid gap-4 lg:grid-cols-[16rem_minmax(0,1fr)_15rem]">
+          <aside className="no-print hidden flex-col gap-4 lg:flex">{sidePanels}</aside>
         <main className="print-area min-w-0 rounded-xl border bg-card/60 p-3 shadow-xs lg:hidden">
           {renderWeekPlanner()}
         </main>

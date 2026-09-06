@@ -7,13 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CATEGORY_STYLES } from "@/components/planner/category";
 import { cn } from "@/lib/utils";
-import {
-  DAY_NAMES,
-  addDays,
-  formatJalali,
-  isSameDay,
-  toPersianDigits,
-} from "@/lib/jalali";
+import { DAY_NAMES, addDays, formatJalali, isSameDay, toPersianDigits } from "@/lib/jalali";
 import { CATEGORY_LABELS, type Activity, type Slot } from "@/lib/planner-types";
 
 type Props = {
@@ -45,22 +39,21 @@ export function WeekGrid({
   const today = new Date();
 
   const dayTotal = (dayIndex: number) =>
-    activities
-      .filter((a) => a.dayIndex === dayIndex)
-      .reduce((sum, a) => sum + a.duration, 0);
+    activities.filter((a) => a.dayIndex === dayIndex).reduce((sum, a) => sum + a.duration, 0);
 
   return (
     <div
-      className="print-grid overflow-x-auto"
+      className="print-grid overflow-x-auto print:overflow-visible"
       style={{ scrollbarGutter: "stable" }}
     >
       <div
-        className={visibleDays.length > 1 ? "grid min-w-[46rem] gap-1.5" : "grid gap-1.5"}
+        className={
+          visibleDays.length > 1 ? "grid min-w-[46rem] gap-1.5 print:min-w-0" : "grid gap-1.5"
+        }
         style={{
           gridTemplateColumns: `6.5rem repeat(${visibleDays.length}, minmax(0, 1fr))`,
         }}
       >
-
         <div className="sticky top-0 z-10 bg-background pb-1" />
         {visibleDays.map((dayIndex) => {
           const date = addDays(weekStart, dayIndex);
@@ -197,9 +190,7 @@ function SlotHeader({
             />
           </div>
         </div>
-        <p className="text-[11px] text-muted-foreground">
-          مدت هر فعالیت مستقل از طول پارت است.
-        </p>
+        <p className="text-[11px] text-muted-foreground">مدت هر فعالیت مستقل از طول پارت است.</p>
       </PopoverContent>
     </Popover>
   );
@@ -230,10 +221,7 @@ function ActivityCard({
       >
         <div className="flex items-center gap-1.5">
           <span
-            className={cn(
-              "truncate text-[12px] font-semibold",
-              activity.done && "line-through",
-            )}
+            className={cn("truncate text-[12px] font-semibold", activity.done && "line-through")}
           >
             {activity.subject}
           </span>
