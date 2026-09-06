@@ -11,12 +11,22 @@ import { TilesPanel } from "@/components/planner/tiles-panel";
 import { WeekGrid } from "@/components/planner/week-grid";
 import { WeekSummary } from "@/components/planner/week-summary";
 import { Button } from "@/components/ui/button";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PlannerProvider, usePlanner } from "@/lib/planner-store";
-import { DAY_NAMES, addDays, formatJalali, persianDayIndex, startOfPersianWeek } from "@/lib/jalali";
+import {
+  DAY_NAMES,
+  addDays,
+  formatJalali,
+  persianDayIndex,
+  startOfPersianWeek,
+} from "@/lib/jalali";
 import type { WeekPlan } from "@/lib/planner-types";
 import { cn } from "@/lib/utils";
+
+const RESIZE_HANDLE_CLASS =
+  "relative z-10 w-4 shrink-0 cursor-col-resize border-0 bg-transparent after:absolute after:inset-y-3 after:left-1/2 after:w-px after:-translate-x-1/2 after:rounded-full after:bg-transparent after:transition-colors hover:after:bg-border focus-visible:ring-1 focus-visible:ring-ring focus-visible:after:bg-ring data-[separator=active]:after:bg-primary/50 data-[separator=focus]:after:bg-ring";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -131,6 +141,63 @@ function Planner() {
     </>
   );
 
+  const renderWeekPlanner = () => (
+    <>
+      {isMobile ? (
+        <div className="no-print mb-3 flex gap-1 overflow-x-auto">
+          {DAY_NAMES.map((name, i) => (
+            <button
+              key={name}
+              type="button"
+              onClick={() => setSelectedDay(i)}
+              className={cn(
+                "flex shrink-0 flex-col items-center rounded-lg border px-3 py-1.5 text-xs",
+                selectedDay === i
+                  ? "border-primary bg-primary/10 font-semibold text-primary"
+                  : "text-muted-foreground",
+              )}
+            >
+              <span>{name}</span>
+              <span className="text-[10px]">{formatJalali(addDays(weekStart, i))}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {week.activities.length === 0 ? (
+        <p className="no-print mb-3 rounded-lg border border-dashed px-4 py-3 text-center text-[12px] text-muted-foreground">
+          این هفته خالی است. روی هر خانه بزنید تا فعالیت اضافه شود، یا یک کاشی آماده را در آن رها
+          کنید.
+        </p>
+      ) : null}
+
+      <WeekGrid
+        slots={slots}
+        activities={week.activities}
+        weekStart={weekStart}
+        visibleDays={visibleDays}
+        pickedTileId={pickedTileId}
+        onCellActivate={handleCellActivate}
+        onActivitySelect={(activity) => setTarget({ mode: "edit", activity })}
+        onActivityToggle={planner.toggleActivity}
+        onTileDrop={placeTile}
+        onSlotChange={planner.updateSlot}
+      />
+    </>
+  );
+
+  const tilesPanel = (
+    <div className="rounded-xl border bg-card p-4 shadow-xs">
+      <TilesPanel
+        tiles={data.settings.tiles}
+        pickedTileId={pickedTileId}
+        onPick={setPickedTileId}
+        onAdd={planner.addTile}
+        onRemove={planner.removeTile}
+      />
+    </div>
+  );
+
   return (
     <div className="min-h-screen">
       <div className="mx-auto w-full max-w-[110rem] space-y-4 p-3 sm:p-5">
@@ -145,9 +212,7 @@ function Planner() {
           onShiftWeek={(weeks) => planner.setWeekStart(addDays(weekStart, weeks * 7))}
           onToday={() => planner.setWeekStart(startOfPersianWeek(new Date()))}
           onClearWeek={handleClearWeek}
-          onThemeToggle={() =>
-            planner.setTheme(data.settings.theme === "dark" ? "light" : "dark")
-          }
+          onThemeToggle={() => planner.setTheme(data.settings.theme === "dark" ? "light" : "dark")}
           onPrint={() => window.print()}
           onExport={handleExport}
           onImport={handleImport}
@@ -177,70 +242,64 @@ function Planner() {
 
         <QuoteStrip quotes={data.settings.quotes} onQuotesChange={planner.setQuotes} />
 
-        <div className="grid gap-4 lg:grid-cols-[16rem_minmax(0,1fr)_15rem]">
-          <aside className="no-print hidden flex-col gap-4 lg:flex">{sidePanels}</aside>
+        <main className="print-area min-w-0 rounded-xl border bg-card/60 p-3 shadow-xs lg:hidden">
+          {renderWeekPlanner()}
+        </main>
 
-          <main className="print-area min-w-0 rounded-xl border bg-card/60 p-3 shadow-xs">
-            {isMobile ? (
-              <div className="no-print mb-3 flex gap-1 overflow-x-auto">
-                {DAY_NAMES.map((name, i) => (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => setSelectedDay(i)}
-                    className={cn(
-                      "flex shrink-0 flex-col items-center rounded-lg border px-3 py-1.5 text-xs",
-                      selectedDay === i
-                        ? "border-primary bg-primary/10 font-semibold text-primary"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    <span>{name}</span>
-                    <span className="text-[10px]">{formatJalali(addDays(weekStart, i))}</span>
-                  </button>
-                ))}
-              </div>
-            ) : null}
+        <div className="no-print hidden min-w-0 lg:block">
+          <ResizablePanelGroup
+            id="planner-desktop"
+            orientation="horizontal"
+            className="w-full"
+            style={{ height: "auto", overflow: "visible" }}
+          >
+            <ResizablePanel
+              id="planner-calendar"
+              defaultSize="16rem"
+              minSize="12rem"
+              maxSize="24rem"
+              groupResizeBehavior="preserve-pixel-size"
+            >
+              <aside className="flex flex-col gap-4">{sidePanels}</aside>
+            </ResizablePanel>
 
-            {week.activities.length === 0 ? (
-              <p className="no-print mb-3 rounded-lg border border-dashed px-4 py-3 text-center text-[12px] text-muted-foreground">
-                این هفته خالی است. روی هر خانه بزنید تا فعالیت اضافه شود، یا یک کاشی آماده را در آن
-                رها کنید.
-              </p>
-            ) : null}
+            <ResizableHandle aria-label="تغییر اندازه پنل تقویم" className={RESIZE_HANDLE_CLASS} />
 
-            <WeekGrid
-              slots={slots}
-              activities={week.activities}
-              weekStart={weekStart}
-              visibleDays={visibleDays}
-              pickedTileId={pickedTileId}
-              onCellActivate={handleCellActivate}
-              onActivitySelect={(activity) => setTarget({ mode: "edit", activity })}
-              onActivityToggle={planner.toggleActivity}
-              onTileDrop={placeTile}
-              onSlotChange={planner.updateSlot}
+            <ResizablePanel
+              id="planner-week"
+              minSize="20rem"
+              className="min-w-0"
+              style={{ overflow: "hidden" }}
+            >
+              <main className="min-w-0 rounded-xl border bg-card/60 p-3 shadow-xs">
+                {renderWeekPlanner()}
+              </main>
+            </ResizablePanel>
+
+            <ResizableHandle
+              aria-label="تغییر اندازه پنل کاشی‌ها"
+              className={RESIZE_HANDLE_CLASS}
             />
-          </main>
 
-          <aside className="no-print hidden lg:block">
-            <div className="rounded-xl border bg-card p-4 shadow-xs">
-              <TilesPanel
-                tiles={data.settings.tiles}
-                pickedTileId={pickedTileId}
-                onPick={setPickedTileId}
-                onAdd={planner.addTile}
-                onRemove={planner.removeTile}
-              />
-            </div>
-          </aside>
+            <ResizablePanel
+              id="planner-tiles"
+              defaultSize="15rem"
+              minSize="11rem"
+              maxSize="22rem"
+              groupResizeBehavior="preserve-pixel-size"
+            >
+              <aside>{tilesPanel}</aside>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </div>
       </div>
 
       <Sheet open={mobilePanel !== null} onOpenChange={(open) => !open && setMobilePanel(null)}>
         <SheetContent side="left" className="w-full overflow-y-auto sm:max-w-sm">
           <SheetHeader>
-            <SheetTitle>{mobilePanel === "tiles" ? "کاشی‌های آماده" : "تقویم و توازن هفته"}</SheetTitle>
+            <SheetTitle>
+              {mobilePanel === "tiles" ? "کاشی‌های آماده" : "تقویم و توازن هفته"}
+            </SheetTitle>
           </SheetHeader>
           <div className="space-y-4 px-4 pb-6">
             {mobilePanel === "tiles" ? (
