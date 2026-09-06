@@ -4,7 +4,6 @@ import {
   ChevronRight,
   Download,
   Eraser,
-  LayoutGrid,
   Moon,
   Printer,
   Sun,
@@ -26,7 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { addDays, formatHours, formatWeekRange, toPersianDigits } from "@/lib/jalali";
+import { formatHours, formatWeekRange, toPersianDigits } from "@/lib/jalali";
 import type { Activity } from "@/lib/planner-types";
 
 type Props = {
@@ -183,10 +182,6 @@ export function PlannerHeader({
           {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
         </Button>
       </div>
-      <span className="sr-only">
-        پایان هفته: {formatWeekRange(addDays(weekStart, 0))}
-        <LayoutGrid className="size-0" />
-      </span>
     </header>
   );
 }
