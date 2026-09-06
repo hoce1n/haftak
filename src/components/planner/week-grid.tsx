@@ -55,11 +55,12 @@ export function WeekGrid({
       style={{ scrollbarGutter: "stable" }}
     >
       <div
-        className="grid min-w-fit gap-1.5"
+        className={visibleDays.length > 1 ? "grid min-w-[46rem] gap-1.5" : "grid gap-1.5"}
         style={{
-          gridTemplateColumns: `7.5rem repeat(${visibleDays.length}, minmax(9.5rem, 1fr))`,
+          gridTemplateColumns: `6.5rem repeat(${visibleDays.length}, minmax(0, 1fr))`,
         }}
       >
+
         <div className="sticky top-0 z-10 bg-background pb-1" />
         {visibleDays.map((dayIndex) => {
           const date = addDays(weekStart, dayIndex);
