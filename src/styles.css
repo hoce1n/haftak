@@ -4,6 +4,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: Vazirmatn;
+  src: url("/fonts/Vazirmatn-VariableFont_wght.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 /*
  * Design system definition.
  *
@@ -67,6 +75,7 @@
   --color-cat-test-soft: var(--cat-test-soft);
   --color-cat-memorize: var(--cat-memorize);
   --color-cat-memorize-soft: var(--cat-memorize-soft);
+  --font-vazirmatn: Vazirmatn, ui-sans-serif, system-ui, sans-serif;
   --font-sans: Vazirmatn, ui-sans-serif, system-ui, sans-serif;
   --shadow-soft: 0 1px 2px oklch(0.3 0.03 240 / 6%), 0 8px 24px oklch(0.3 0.03 240 / 5%);
 }
