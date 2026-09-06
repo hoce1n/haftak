@@ -84,9 +84,10 @@ Stored data is versioned, and existing prototype data in the browser is migrated
 9. PDF/print output
 10. Responsive passes for tablet and phone, accessibility pass
 
-## Questions before I build
+## Decisions now settled
 
-1. Time slots: keep them as free-text "Hour 1…10", or give each slot a real start/end time so hours are computed automatically? Should the number of slots be adjustable?
-2. Activity categories: is study / review / test / memorise / rest the right fixed set for colours, or do you want to define your own labels?
-3. Should past weeks stay browsable as history, or does the app only ever show the selected week with no archive view?
-4. Visual direction: pick a calm palette and typeface yourself, or do you want to see a couple of design options first?
+- 10 fixed slots for V1, each with an editable title and editable start/end time; activity duration independent of slot length
+- Four fixed categories: study, review, test, memorise — subtle, no custom categories yet
+- Past and future weeks browsable through the Jalali calendar, each week stored separately; no separate history page
+- Visual direction chosen by me: calm, minimal, modern, focused, strong RTL typography, no gradient or dashboard noise
+- Single user, saved in the browser, no login
