@@ -1,5 +1,6 @@
-export const CATEGORIES = ["study", "review", "test", "memorize"] as const;
 import { toPersianDigits } from "./jalali";
+
+export const CATEGORIES = ["study", "review", "test", "memorize"] as const;
 
 export type Category = (typeof CATEGORIES)[number];
 
