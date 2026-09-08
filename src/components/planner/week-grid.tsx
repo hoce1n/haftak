@@ -6,14 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CATEGORY_STYLES } from "@/components/planner/category";
 import { cn } from "@/lib/utils";
-import {
-  DAY_NAMES,
-  addDays,
-  formatHours,
-  formatJalali,
-  isSameDay,
-  toPersianDigits,
-} from "@/lib/jalali";
+import { DAY_NAMES, addDays, formatHours, formatJalali, toPersianDigits } from "@/lib/jalali";
 import { CATEGORY_LABELS, type Activity, type Slot } from "@/lib/planner-types";
 
 type Props = {
@@ -45,6 +38,8 @@ export function WeekGrid({
 
   const dayTotal = (dayIndex: number) =>
     activities.filter((a) => a.dayIndex === dayIndex).reduce((sum, a) => sum + a.duration, 0);
+  const desktop = visibleDays.length > 1;
+  const partCount = Math.max(slots.length, 1);
 
   return (
     <div
@@ -53,13 +48,13 @@ export function WeekGrid({
     >
       <div
         className={
-          visibleDays.length > 1 ? "grid min-w-184 gap-1.5 print:min-w-0" : "grid gap-1.5"
+          desktop ? "print-week grid min-w-184 gap-1.5 print:min-w-0" : "print-week grid gap-1.5"
         }
         style={{
-          gridTemplateColumns:
-            visibleDays.length > 1
-              ? `5.5rem repeat(${slots.length}, minmax(0, 1fr)) 6.25rem`
-              : `5.5rem minmax(0, 1fr) 6.25rem`,
+          gridTemplateColumns: desktop
+            ? `5.5rem repeat(${partCount}, minmax(0, 1fr)) 6.25rem`
+            : `5.5rem minmax(0, 1fr) 6.25rem`,
+          ["--print-part-count" as string]: String(partCount),
         }}
       >
         <div className="sticky top-0 z-10 bg-background pb-1" />
