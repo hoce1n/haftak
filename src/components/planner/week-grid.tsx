@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CATEGORY_STYLES } from "@/components/planner/category";
 import { cn } from "@/lib/utils";
-import { DAY_NAMES, addDays, formatHours, formatJalali, toPersianDigits } from "@/lib/jalali";
+import { DAY_NAMES, addDays, formatJalali, isSameDay, toPersianDigits } from "@/lib/jalali";
 import { CATEGORY_LABELS, type Activity, type Slot } from "@/lib/planner-types";
 
 type Props = {
@@ -39,12 +39,15 @@ export function WeekGrid({
   const dayTotal = (dayIndex: number) =>
     activities.filter((a) => a.dayIndex === dayIndex).reduce((sum, a) => sum + a.duration, 0);
 
-  const desktop = visibleDays.length > 1;
-
   return (
-    <div className="print-grid overflow-x-auto" style={{ scrollbarGutter: "stable" }}>
+    <div
+      className="print-grid overflow-x-auto print:overflow-visible"
+      style={{ scrollbarGutter: "stable" }}
+    >
       <div
-        className={desktop ? "grid min-w-[58rem] gap-1.5" : "grid gap-1.5"}
+        className={
+          visibleDays.length > 1 ? "grid min-w-[46rem] gap-1.5 print:min-w-0" : "grid gap-1.5"
+        }
         style={{
           gridTemplateColumns: desktop
             ? `7.5rem repeat(${slots.length}, minmax(0, 1fr)) 6.25rem`

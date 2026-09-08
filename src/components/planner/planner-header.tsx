@@ -90,7 +90,7 @@ export function PlannerHeader({
       <div className="no-print flex flex-wrap items-center gap-2">
         <div className="flex items-center rounded-md border bg-card">
           <Button variant="ghost" size="icon" className="size-8" onClick={() => onShiftWeek(1)}>
-            <ChevronLeft className="size-4" />
+            <ChevronRight className="size-4" />
             <span className="sr-only">هفته بعد</span>
           </Button>
           <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={onToday}>
@@ -98,7 +98,7 @@ export function PlannerHeader({
             این هفته
           </Button>
           <Button variant="ghost" size="icon" className="size-8" onClick={() => onShiftWeek(-1)}>
-            <ChevronRight className="size-4" />
+            <ChevronLeft className="size-4" />
             <span className="sr-only">هفته قبل</span>
           </Button>
         </div>
