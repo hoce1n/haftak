@@ -181,13 +181,15 @@
   }
 }
 
+/* Must stay at the stylesheet root. Nested @page inside @media print is ignored
+   by Chromium print-to-PDF, which then emits A4 portrait (595 x 842 pt). */
+@page {
+  size: 297mm 210mm;
+  margin: 7mm;
+}
+
 /* Print / PDF: transposed 7-day x 9-column week on one A4 landscape page. */
 @media print {
-  @page {
-    size: A4 landscape;
-    margin: 7mm;
-  }
-
   html,
   body {
     width: 100% !important;
