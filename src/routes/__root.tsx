@@ -111,6 +111,7 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="fa" dir="rtl">
       <head>
         <HeadContent />
+        <style>{`@page{size:297mm 210mm;margin:7mm}`}</style>
       </head>
       <body>
         {children}
