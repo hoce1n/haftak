@@ -183,6 +183,10 @@ function Planner() {
         onTileDrop={placeTile}
         onSlotChange={planner.updateSlot}
       />
+
+      <div className="print-quote mt-1">
+        <QuoteStrip quotes={data.settings.quotes} onQuotesChange={planner.setQuotes} />
+      </div>
     </>
   );
 
@@ -239,8 +243,6 @@ function Planner() {
             </span>
           }
         />
-
-        <QuoteStrip quotes={data.settings.quotes} onQuotesChange={planner.setQuotes} />
 
         <div className="planner-layout grid gap-4 lg:grid-cols-[16rem_minmax(0,1fr)_15rem]">
           <main className="print-area min-w-0 rounded-xl border bg-card/60 p-3 shadow-xs lg:hidden">

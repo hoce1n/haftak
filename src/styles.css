@@ -181,11 +181,11 @@
   }
 }
 
-/* Print / PDF: the full 7-day week on one A4 landscape page. */
+/* Print / PDF: transposed 7-day x 9-column week on one A4 landscape page. */
 @media print {
   @page {
     size: A4 landscape;
-    margin: 8mm;
+    margin: 7mm;
   }
 
   html,
@@ -213,10 +213,9 @@
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
-    gap: 0.35rem !important;
+    gap: 0.3rem !important;
   }
 
-  /* Collapse only the page shell grid, not the week table. */
   .planner-layout {
     display: block !important;
     width: 100% !important;
@@ -239,20 +238,20 @@
   }
 
   header {
-    gap: 0.35rem !important;
+    gap: 0.25rem !important;
   }
 
   header h1 {
-    font-size: 14px !important;
+    font-size: 13px !important;
   }
 
   header p,
   header dt {
-    font-size: 10px !important;
+    font-size: 9px !important;
   }
 
   header dd {
-    font-size: 13px !important;
+    font-size: 12px !important;
   }
 
   .print-grid {
@@ -264,46 +263,71 @@
     scrollbar-gutter: auto !important;
   }
 
-  /* Drop screen min-width / overflow so all days share the page width. */
-  .print-grid > .grid {
+  /* Day label + N parts + daily total, using the printable page width. */
+  .print-week {
+    display: grid !important;
     min-width: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    gap: 0.2rem !important;
+    gap: 0.15rem !important;
+    grid-template-columns: 4.4rem repeat(var(--print-part-count, 8), minmax(0, 1fr)) 4.6rem !important;
   }
 
-  .print-grid > .grid > * {
+  .print-week > div,
+  .print-week .contents > div,
+  .print-week button {
     min-width: 0 !important;
     max-width: 100% !important;
     position: static !important;
-    padding: 0.2rem 0.25rem !important;
   }
 
-  .print-cell {
+  .print-week button {
+    padding: 0.15rem 0.2rem !important;
+  }
+
+  .print-cell,
+  .print-week .contents > div {
     break-inside: avoid;
-    min-height: 2.4rem !important;
-    padding: 0.12rem !important;
+    min-height: 1.7rem !important;
+    padding: 0.1rem !important;
+  }
+
+  .print-cell > div {
+    min-height: 0 !important;
+    gap: 0.15rem !important;
+  }
+
+  .print-quote {
+    margin-top: 0.25rem !important;
+  }
+
+  .print-quote > div {
+    padding: 0.3rem 0.6rem !important;
   }
 
   .print-grid {
-    font-size: 9px;
+    font-size: 8px;
   }
 
-  .print-grid .text-sm {
+  .print-grid .text-base {
     font-size: 10px !important;
   }
 
-  .print-grid .text-\[13px\] {
+  .print-grid .text-sm {
     font-size: 9px !important;
   }
 
-  .print-grid .text-\[12px\] {
+  .print-grid .text-\[13px\] {
     font-size: 8px !important;
+  }
+
+  .print-grid .text-\[12px\] {
+    font-size: 7.5px !important;
   }
 
   .print-grid .text-\[11px\],
   .print-grid .text-\[10px\] {
     font-size: 7px !important;
-    line-height: 1.25 !important;
+    line-height: 1.2 !important;
   }
 }
