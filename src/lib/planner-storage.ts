@@ -56,6 +56,11 @@ function normalizeSlots(raw: unknown): Slot[] {
   });
 }
 
+function remapActivitySlot(slotId: string, slots: Slot[]) {
+  if (slots.some((slot) => slot.id === slotId)) return slotId;
+  return slots[slots.length - 1]?.id || slots[0]!.id;
+}
+
 function normalizeTiles(raw: unknown): Tile[] {
   if (!Array.isArray(raw)) return defaultTiles();
   return raw
@@ -76,7 +81,10 @@ function normalizeActivity(raw: unknown, slots: Slot[], index: number): Activity
   const o = raw as Record<string, unknown>;
   const dayIndex = num(o["dayIndex"] ?? o["day"], 0);
   const slotIndex = num(o["slotIndex"] ?? o["slot"], 0);
-  const slotId = str(o["slotId"]) || slots[Math.min(slotIndex, slots.length - 1)]?.id || slots[0]!.id;
+  const slotId = remapActivitySlot(
+    str(o["slotId"]) || slots[Math.min(slotIndex, slots.length - 1)]?.id || slots[0]!.id,
+    slots,
+  );
   return {
     id: str(o["id"], `a-${index}`) || `a-${index}`,
     dayIndex: Math.min(6, Math.max(0, Math.round(dayIndex))),

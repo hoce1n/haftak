@@ -74,15 +74,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "برنامه‌ریز هفتگی مطالعه" },
+      { title: "برنامه هفتگی مطالعه" },
       {
         name: "description",
-        content: "برنامه‌ریز هفتگی مطالعه با تقویم شمسی برای دانش‌آموزان کنکوری.",
+        content: "برنامه هفتگی مطالعه با تقویم شمسی برای دانش‌آموزان کنکوری.",
       },
-      { property: "og:title", content: "برنامه‌ریز هفتگی مطالعه" },
+      { property: "og:title", content: "برنامه هفتگی مطالعه" },
       {
         property: "og:description",
-        content: "برنامه‌ریز هفتگی مطالعه با تقویم شمسی برای دانش‌آموزان کنکوری.",
+        content: "برنامه هفتگی مطالعه با تقویم شمسی برای دانش‌آموزان کنکوری.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

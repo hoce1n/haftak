@@ -75,8 +75,6 @@ const SLOT_TIMES: Array<[string, string]> = [
   ["15:45", "17:15"],
   ["17:30", "19:00"],
   ["19:15", "20:45"],
-  ["21:00", "22:30"],
-  ["22:30", "23:59"],
 ];
 
 export function defaultSlots(): Slot[] {
@@ -90,7 +88,13 @@ export function defaultSlots(): Slot[] {
 
 export function defaultTiles(): Tile[] {
   return [
-    { id: "tile-1", subject: "زیست‌شناسی", topic: "مطالعه مفهومی", duration: 90, category: "study" },
+    {
+      id: "tile-1",
+      subject: "زیست‌شناسی",
+      topic: "مطالعه مفهومی",
+      duration: 90,
+      category: "study",
+    },
     { id: "tile-2", subject: "ریاضیات", topic: "حل تست آموزشی", duration: 60, category: "test" },
     { id: "tile-3", subject: "شیمی", topic: "مرور خلاصه‌ها", duration: 45, category: "review" },
     { id: "tile-4", subject: "عربی", topic: "لغت و قواعد", duration: 30, category: "memorize" },
