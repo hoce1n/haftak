@@ -14,20 +14,26 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PlannerProvider, usePlanner } from "@/lib/planner-store";
-import { DAY_NAMES, addDays, formatJalali, persianDayIndex, startOfPersianWeek } from "@/lib/jalali";
+import {
+  DAY_NAMES,
+  addDays,
+  formatJalali,
+  persianDayIndex,
+  startOfPersianWeek,
+} from "@/lib/jalali";
 import type { WeekPlan } from "@/lib/planner-types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "برنامه‌ریز هفتگی مطالعه | برنامه‌ی کنکور" },
+      { title: "برنامه هفتگی مطالعه | برنامه‌ی کنکور" },
       {
         name: "description",
         content:
-          "برنامه‌ریز هفتگی مطالعه با تقویم شمسی، پارت‌های زمانی قابل تنظیم، کاشی‌های آماده و خروجی PDF برای دانش‌آموزان کنکوری.",
+          "برنامه هفتگی مطالعه با تقویم شمسی، پارت‌های زمانی قابل تنظیم، کاشی‌های آماده و خروجی PDF برای دانش‌آموزان کنکوری.",
       },
-      { property: "og:title", content: "برنامه‌ریز هفتگی مطالعه" },
+      { property: "og:title", content: "برنامه هفتگی مطالعه" },
       {
         property: "og:description",
         content: "هفته‌ی مطالعه‌ات را با تقویم شمسی بچین، پیشرفتت را ببین و خروجی PDF بگیر.",
@@ -145,9 +151,7 @@ function Planner() {
           onShiftWeek={(weeks) => planner.setWeekStart(addDays(weekStart, weeks * 7))}
           onToday={() => planner.setWeekStart(startOfPersianWeek(new Date()))}
           onClearWeek={handleClearWeek}
-          onThemeToggle={() =>
-            planner.setTheme(data.settings.theme === "dark" ? "light" : "dark")
-          }
+          onThemeToggle={() => planner.setTheme(data.settings.theme === "dark" ? "light" : "dark")}
           onPrint={() => window.print()}
           onExport={handleExport}
           onImport={handleImport}
@@ -174,8 +178,6 @@ function Planner() {
             </span>
           }
         />
-
-        <QuoteStrip quotes={data.settings.quotes} onQuotesChange={planner.setQuotes} />
 
         <div className="grid gap-4 lg:grid-cols-[16rem_minmax(0,1fr)_15rem]">
           <aside className="no-print hidden flex-col gap-4 lg:flex">{sidePanels}</aside>
@@ -221,6 +223,10 @@ function Planner() {
               onTileDrop={placeTile}
               onSlotChange={planner.updateSlot}
             />
+
+            <div className="mt-1">
+              <QuoteStrip quotes={data.settings.quotes} onQuotesChange={planner.setQuotes} />
+            </div>
           </main>
 
           <aside className="no-print hidden lg:block">
@@ -240,7 +246,9 @@ function Planner() {
       <Sheet open={mobilePanel !== null} onOpenChange={(open) => !open && setMobilePanel(null)}>
         <SheetContent side="left" className="w-full overflow-y-auto sm:max-w-sm">
           <SheetHeader>
-            <SheetTitle>{mobilePanel === "tiles" ? "کاشی‌های آماده" : "تقویم و توازن هفته"}</SheetTitle>
+            <SheetTitle>
+              {mobilePanel === "tiles" ? "کاشی‌های آماده" : "تقویم و توازن هفته"}
+            </SheetTitle>
           </SheetHeader>
           <div className="space-y-4 px-4 pb-6">
             {mobilePanel === "tiles" ? (

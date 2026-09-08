@@ -1,19 +1,12 @@
 import { Check, Clock, Plus } from "lucide-react";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CATEGORY_STYLES } from "@/components/planner/category";
 import { cn } from "@/lib/utils";
-import {
-  DAY_NAMES,
-  addDays,
-  formatJalali,
-  isSameDay,
-  toPersianDigits,
-} from "@/lib/jalali";
+import { DAY_NAMES, addDays, formatHours, formatJalali, toPersianDigits } from "@/lib/jalali";
 import { CATEGORY_LABELS, type Activity, type Slot } from "@/lib/planner-types";
 
 type Props = {
@@ -42,106 +35,104 @@ export function WeekGrid({
   onSlotChange,
 }: Props) {
   const [hoverCell, setHoverCell] = useState<string | null>(null);
-  const today = new Date();
 
   const dayTotal = (dayIndex: number) =>
-    activities
-      .filter((a) => a.dayIndex === dayIndex)
-      .reduce((sum, a) => sum + a.duration, 0);
+    activities.filter((a) => a.dayIndex === dayIndex).reduce((sum, a) => sum + a.duration, 0);
+
+  const desktop = visibleDays.length > 1;
 
   return (
-    <div
-      className="print-grid overflow-x-auto"
-      style={{ scrollbarGutter: "stable" }}
-    >
+    <div className="print-grid overflow-x-auto" style={{ scrollbarGutter: "stable" }}>
       <div
-        className={visibleDays.length > 1 ? "grid min-w-[46rem] gap-1.5" : "grid gap-1.5"}
+        className={desktop ? "grid min-w-[58rem] gap-1.5" : "grid gap-1.5"}
         style={{
-          gridTemplateColumns: `6.5rem repeat(${visibleDays.length}, minmax(0, 1fr))`,
+          gridTemplateColumns: desktop
+            ? `7.5rem repeat(${slots.length}, minmax(0, 1fr)) 6.25rem`
+            : `7.5rem minmax(0, 1fr) 6.25rem`,
         }}
       >
-
         <div className="sticky top-0 z-10 bg-background pb-1" />
+        {slots.map((slot) => (
+          <SlotHeader key={slot.id} slot={slot} onSlotChange={onSlotChange} />
+        ))}
+        <div className="sticky top-0 z-10 rounded-lg border bg-card px-2 py-2 text-center">
+          <div className="text-sm font-semibold">جمع روز</div>
+          <div className="text-[11px] text-muted-foreground">ساعت مطالعه</div>
+        </div>
+
         {visibleDays.map((dayIndex) => {
           const date = addDays(weekStart, dayIndex);
-          const isToday = isSameDay(date, today);
+          const minutes = dayTotal(dayIndex);
           return (
-            <div
-              key={dayIndex}
-              className={cn(
-                "sticky top-0 z-10 rounded-lg border bg-card px-2 py-2 text-center",
-                isToday && "border-primary/40 bg-primary/5",
-              )}
-            >
-              <div className="text-sm font-semibold">{DAY_NAMES[dayIndex]}</div>
-              <div className="text-[11px] text-muted-foreground">{formatJalali(date)}</div>
-              <div className="mt-1 text-[11px] text-muted-foreground">
-                {dayTotal(dayIndex) > 0
-                  ? `${toPersianDigits(Math.round((dayTotal(dayIndex) / 60) * 10) / 10)} ساعت`
-                  : "—"}
+            <div key={dayIndex} className="contents">
+              <div className="flex h-full flex-col justify-center rounded-lg border border-primary/40 bg-muted/70 px-2.5 py-3 text-right">
+                <div className="text-sm font-semibold">{DAY_NAMES[dayIndex]}</div>
+                <div className="text-[11px] text-muted-foreground">{formatJalali(date)}</div>
+              </div>
+              {slots.map((slot) => {
+                const cellKey = `${dayIndex}-${slot.id}`;
+                const cellActivities = activities.filter(
+                  (a) => a.dayIndex === dayIndex && a.slotId === slot.id,
+                );
+                return (
+                  <div
+                    key={cellKey}
+                    className={cn(
+                      "print-cell group/cell min-h-32 rounded-lg border border-dashed bg-card/40 p-2 transition-colors",
+                      hoverCell === cellKey && "border-primary bg-primary/5",
+                      pickedTileId && "border-primary/40",
+                    )}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setHoverCell(cellKey);
+                    }}
+                    onDragLeave={() => setHoverCell((c) => (c === cellKey ? null : c))}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setHoverCell(null);
+                      const tileId = e.dataTransfer.getData("text/tile-id");
+                      if (tileId) onTileDrop(tileId, dayIndex, slot.id);
+                    }}
+                  >
+                    <div className="flex h-full min-h-28 flex-col gap-1.5">
+                      {cellActivities.map((activity) => (
+                        <ActivityCard
+                          key={activity.id}
+                          activity={activity}
+                          onSelect={() => onActivitySelect(activity)}
+                          onToggle={() => onActivityToggle(activity.id)}
+                        />
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => onCellActivate(dayIndex, slot.id)}
+                        className={cn(
+                          "no-print flex items-center justify-center gap-1 rounded-md py-2 text-[11px] text-muted-foreground transition-opacity",
+                          "hover:bg-accent hover:text-foreground",
+                          cellActivities.length > 0
+                            ? "opacity-0 group-hover/cell:opacity-100 focus-visible:opacity-100"
+                            : "flex-1",
+                        )}
+                        aria-label={`افزودن فعالیت به ${DAY_NAMES[dayIndex]} — ${slot.title}`}
+                      >
+                        <Plus className="size-3.5" />
+                        {pickedTileId ? "اینجا قرار بده" : "افزودن"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="flex h-full min-h-32 flex-col items-center justify-center rounded-lg border bg-card px-2 py-3 text-center">
+                <div className="text-base font-semibold text-primary">
+                  {minutes > 0 ? formatHours(minutes) : "—"}
+                </div>
+                <div className="mt-1 text-[11px] text-muted-foreground">
+                  {minutes > 0 ? "ساعت مطالعه" : "بدون برنامه"}
+                </div>
               </div>
             </div>
           );
         })}
-
-        {slots.map((slot) => (
-          <div key={slot.id} className="contents">
-            <SlotHeader slot={slot} onSlotChange={onSlotChange} />
-            {visibleDays.map((dayIndex) => {
-              const cellKey = `${dayIndex}-${slot.id}`;
-              const cellActivities = activities.filter(
-                (a) => a.dayIndex === dayIndex && a.slotId === slot.id,
-              );
-              return (
-                <div
-                  key={cellKey}
-                  className={cn(
-                    "print-cell group/cell min-h-24 rounded-lg border border-dashed bg-card/40 p-1.5 transition-colors",
-                    hoverCell === cellKey && "border-primary bg-primary/5",
-                    pickedTileId && "border-primary/40",
-                  )}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setHoverCell(cellKey);
-                  }}
-                  onDragLeave={() => setHoverCell((c) => (c === cellKey ? null : c))}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    setHoverCell(null);
-                    const tileId = e.dataTransfer.getData("text/tile-id");
-                    if (tileId) onTileDrop(tileId, dayIndex, slot.id);
-                  }}
-                >
-                  <div className="flex h-full flex-col gap-1.5">
-                    {cellActivities.map((activity) => (
-                      <ActivityCard
-                        key={activity.id}
-                        activity={activity}
-                        onSelect={() => onActivitySelect(activity)}
-                        onToggle={() => onActivityToggle(activity.id)}
-                      />
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => onCellActivate(dayIndex, slot.id)}
-                      className={cn(
-                        "no-print flex items-center justify-center gap-1 rounded-md py-1.5 text-[11px] text-muted-foreground transition-opacity",
-                        "hover:bg-accent hover:text-foreground",
-                        cellActivities.length > 0
-                          ? "opacity-0 group-hover/cell:opacity-100 focus-visible:opacity-100"
-                          : "flex-1",
-                      )}
-                      aria-label={`افزودن فعالیت به ${DAY_NAMES[dayIndex]} — ${slot.title}`}
-                    >
-                      <Plus className="size-3.5" />
-                      {pickedTileId ? "اینجا قرار بده" : "افزودن"}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -159,7 +150,7 @@ function SlotHeader({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex h-full flex-col items-start justify-center gap-0.5 rounded-lg border bg-card px-2.5 py-2 text-right transition-colors hover:border-primary/40 hover:bg-accent/50"
+          className="sticky top-0 z-10 flex h-full flex-col items-center justify-center gap-0.5 rounded-lg border bg-card px-2 py-2 text-center transition-colors hover:border-primary/40 hover:bg-accent/50"
         >
           <span className="text-[13px] font-semibold">{slot.title}</span>
           <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -197,9 +188,7 @@ function SlotHeader({
             />
           </div>
         </div>
-        <p className="text-[11px] text-muted-foreground">
-          مدت هر فعالیت مستقل از طول پارت است.
-        </p>
+        <p className="text-[11px] text-muted-foreground">مدت هر فعالیت مستقل از طول پارت است.</p>
       </PopoverContent>
     </Popover>
   );
@@ -230,10 +219,7 @@ function ActivityCard({
       >
         <div className="flex items-center gap-1.5">
           <span
-            className={cn(
-              "truncate text-[12px] font-semibold",
-              activity.done && "line-through",
-            )}
+            className={cn("truncate text-[12px] font-semibold", activity.done && "line-through")}
           >
             {activity.subject}
           </span>

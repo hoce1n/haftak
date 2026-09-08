@@ -33,12 +33,12 @@ export function QuoteStrip({ quotes, onQuotesChange }: Props) {
   };
 
   return (
-    <div className="flex items-center gap-2 border-y bg-card/60 px-4 py-2.5 text-sm sm:rounded-lg sm:border">
-      <Lightbulb className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-      <p className="flex-1 text-[13px] leading-relaxed text-muted-foreground">
+    <div className="relative flex items-center rounded-lg border bg-card/60 px-10 py-2.5 text-sm">
+      <Lightbulb className="absolute right-3 size-4 shrink-0 text-muted-foreground" aria-hidden />
+      <p className="w-full text-center text-[13px] leading-relaxed text-muted-foreground">
         {quotes[index] ?? ""}
       </p>
-      <div className="no-print flex shrink-0 items-center gap-0.5">
+      <div className="no-print absolute inset-y-0 left-2 flex items-center gap-0.5">
         <Button
           variant="ghost"
           size="icon"
