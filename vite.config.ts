@@ -6,6 +6,9 @@ import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
+  server: {
+    allowedHosts: [".monkeycode-ai.live"],
+  },
   plugins: [
     tanstackStart({
       // Keep the custom server entry for SSR error handling.

@@ -25,17 +25,26 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { formatHours, formatWeekRange, toPersianDigits } from "@/lib/jalali";
+import {
+  DAY_NAMES,
+  WEEK_START_DAYS,
+  formatHours,
+  formatWeekRange,
+  toPersianDigits,
+  type WeekStartDay,
+} from "@/lib/jalali";
 import type { Activity } from "@/lib/planner-types";
 
 type Props = {
   studentName: string;
   weekLabel: string;
   weekStart: Date;
+  weekStartsOn: WeekStartDay;
   activities: Activity[];
   theme: "light" | "dark";
   onStudentName: (value: string) => void;
   onWeekLabel: (value: string) => void;
+  onWeekStartsOn: (day: WeekStartDay) => void;
   onShiftWeek: (weeks: number) => void;
   onToday: () => void;
   onClearWeek: () => void;
@@ -50,10 +59,12 @@ export function PlannerHeader({
   studentName,
   weekLabel,
   weekStart,
+  weekStartsOn,
   activities,
   theme,
   onStudentName,
   onWeekLabel,
+  onWeekStartsOn,
   onShiftWeek,
   onToday,
   onClearWeek,
@@ -115,6 +126,21 @@ export function PlannerHeader({
           value={weekLabel}
           onChange={(e) => onWeekLabel(e.target.value)}
         />
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span className="shrink-0">شروع هفته</span>
+          <select
+            className="h-8 rounded-md border border-input bg-transparent px-2 text-xs text-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
+            value={weekStartsOn}
+            onChange={(e) => onWeekStartsOn(Number(e.target.value) as WeekStartDay)}
+            aria-label="روز شروع هفته"
+          >
+            {WEEK_START_DAYS.map((day) => (
+              <option key={day} value={day}>
+                {DAY_NAMES[day]}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <Separator orientation="vertical" className="hidden h-6 sm:block" />
 

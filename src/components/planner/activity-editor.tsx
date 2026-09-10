@@ -14,17 +14,11 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { CategoryPicker } from "@/components/planner/category-picker";
-import { DAY_NAMES, toPersianDigits } from "@/lib/jalali";
-import {
-  CATEGORY_LABELS,
-  type Activity,
-  type Category,
-  type Slot,
-} from "@/lib/planner-types";
+import { toPersianDigits, weekDayNames, type WeekStartDay } from "@/lib/jalali";
+import { CATEGORY_LABELS, type Activity, type Category, type Slot } from "@/lib/planner-types";
 
 export type EditorTarget =
-  | { mode: "create"; dayIndex: number; slotId: string }
-  | { mode: "edit"; activity: Activity };
+  { mode: "create"; dayIndex: number; slotId: string } | { mode: "edit"; activity: Activity };
 
 type Draft = {
   dayIndex: number;
@@ -39,6 +33,7 @@ type Draft = {
 type Props = {
   target: EditorTarget | null;
   slots: Slot[];
+  weekStartsOn?: WeekStartDay;
   onClose: () => void;
   onCreate: (draft: Draft) => void;
   onUpdate: (id: string, draft: Draft) => void;
@@ -69,8 +64,17 @@ function draftFrom(target: EditorTarget, slots: Slot[]): Draft {
   };
 }
 
-export function ActivityEditor({ target, slots, onClose, onCreate, onUpdate, onDelete }: Props) {
+export function ActivityEditor({
+  target,
+  slots,
+  weekStartsOn = 0,
+  onClose,
+  onCreate,
+  onUpdate,
+  onDelete,
+}: Props) {
   const [draft, setDraft] = useState<Draft | null>(null);
+  const dayNames = weekDayNames(weekStartsOn);
 
   useEffect(() => {
     setDraft(target ? draftFrom(target, slots) : null);
@@ -90,12 +94,10 @@ export function ActivityEditor({ target, slots, onClose, onCreate, onUpdate, onD
     <Sheet open={!!target} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="left" className="w-full gap-0 overflow-y-auto sm:max-w-sm">
         <SheetHeader>
-          <SheetTitle>
-            {target?.mode === "edit" ? "ویرایش فعالیت" : "فعالیت جدید"}
-          </SheetTitle>
+          <SheetTitle>{target?.mode === "edit" ? "ویرایش فعالیت" : "فعالیت جدید"}</SheetTitle>
           <SheetDescription>
             {draft
-              ? `${DAY_NAMES[draft.dayIndex]} — ${slots.find((s) => s.id === draft.slotId)?.title ?? ""}`
+              ? `${dayNames[draft.dayIndex]} — ${slots.find((s) => s.id === draft.slotId)?.title ?? ""}`
               : ""}
           </SheetDescription>
         </SheetHeader>
@@ -111,7 +113,7 @@ export function ActivityEditor({ target, slots, onClose, onCreate, onUpdate, onD
                   onChange={(e) => patch({ dayIndex: Number(e.target.value) })}
                   className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
                 >
-                  {DAY_NAMES.map((name, i) => (
+                  {dayNames.map((name, i) => (
                     <option key={name} value={i}>
                       {name}
                     </option>
@@ -183,13 +185,8 @@ export function ActivityEditor({ target, slots, onClose, onCreate, onUpdate, onD
 
             <div className="space-y-1.5">
               <Label>نوع فعالیت</Label>
-              <CategoryPicker
-                value={draft.category}
-                onChange={(category) => patch({ category })}
-              />
-              <p className="text-[11px] text-muted-foreground">
-                {CATEGORY_LABELS[draft.category]}
-              </p>
+              <CategoryPicker value={draft.category} onChange={(category) => patch({ category })} />
+              <p className="text-[11px] text-muted-foreground">{CATEGORY_LABELS[draft.category]}</p>
             </div>
           </div>
         ) : null}
