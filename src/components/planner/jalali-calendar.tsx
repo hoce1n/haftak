@@ -4,36 +4,37 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  DAY_NAMES,
   JALALI_MONTHS,
   addDays,
   dateKey,
   dateToJalali,
   isSameDay,
   jalaliMonthLength,
-  persianDayIndex,
-  startOfPersianWeek,
+  startOfWeek,
   toGregorian,
   toPersianDigits,
+  weekDayIndex,
+  weekDayNames,
+  type WeekStartDay,
 } from "@/lib/jalali";
 
 type Props = {
   weekStart: Date;
+  weekStartsOn?: WeekStartDay;
   onSelect: (date: Date) => void;
 };
 
-export function JalaliCalendar({ weekStart, onSelect }: Props) {
+export function JalaliCalendar({ weekStart, weekStartsOn = 0, onSelect }: Props) {
   const initial = dateToJalali(weekStart);
   const [view, setView] = useState({ jy: initial.jy, jm: initial.jm });
+  const dayNames = weekDayNames(weekStartsOn);
 
   const firstDay = toGregorian(view.jy, view.jm, 1);
-  const leading = persianDayIndex(firstDay);
+  const leading = weekDayIndex(firstDay, weekStartsOn);
   const length = jalaliMonthLength(view.jy, view.jm);
   const today = new Date();
   const weekEnd = addDays(weekStart, 6);
-  const weekKeys = new Set(
-    Array.from({ length: 7 }, (_, i) => dateKey(addDays(weekStart, i))),
-  );
+  const weekKeys = new Set(Array.from({ length: 7 }, (_, i) => dateKey(addDays(weekStart, i))));
 
   const shift = (delta: number) => {
     setView((prev) => {
@@ -72,7 +73,7 @@ export function JalaliCalendar({ weekStart, onSelect }: Props) {
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-muted-foreground">
-        {DAY_NAMES.map((d) => (
+        {dayNames.map((d) => (
           <div key={d}>{d.slice(0, 1)}</div>
         ))}
       </div>
@@ -86,7 +87,7 @@ export function JalaliCalendar({ weekStart, onSelect }: Props) {
             <button
               key={dateKey(date)}
               type="button"
-              onClick={() => onSelect(startOfPersianWeek(date))}
+              onClick={() => onSelect(startOfWeek(date, weekStartsOn))}
               className={cn(
                 "flex h-8 items-center justify-center rounded-md text-xs transition-colors",
                 "hover:bg-accent",

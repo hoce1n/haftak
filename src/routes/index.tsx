@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CalendarDays, LayoutGrid } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { ActivityEditor, type EditorTarget } from "@/components/planner/activity-editor";
@@ -15,13 +15,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PlannerProvider, usePlanner } from "@/lib/planner-store";
-import {
-  DAY_NAMES,
-  addDays,
-  formatJalali,
-  persianDayIndex,
-  startOfPersianWeek,
-} from "@/lib/jalali";
+import { addDays, formatJalali, shiftWeek, weekDayIndex, weekDayNames } from "@/lib/jalali";
 import type { WeekPlan } from "@/lib/planner-types";
 import { cn } from "@/lib/utils";
 
@@ -62,12 +56,17 @@ function Planner() {
   const isMobile = useIsMobile();
   const [target, setTarget] = useState<EditorTarget | null>(null);
   const [pickedTileId, setPickedTileId] = useState<string | null>(null);
-  const [selectedDay, setSelectedDay] = useState(() => persianDayIndex(new Date()));
+  const [selectedDay, setSelectedDay] = useState(() => weekDayIndex(new Date(), 0));
   const [mobilePanel, setMobilePanel] = useState<"calendar" | "tiles" | null>(null);
 
-  const { data, week, weekStart } = planner;
+  const { data, week, weekStart, weekStartsOn } = planner;
   const slots = data.settings.slots;
+  const dayNames = weekDayNames(weekStartsOn);
   const visibleDays = isMobile ? [selectedDay] : [0, 1, 2, 3, 4, 5, 6];
+
+  useEffect(() => {
+    setSelectedDay(weekDayIndex(new Date(), weekStartsOn));
+  }, [weekStartsOn]);
 
   const placeTile = (tileId: string, dayIndex: number, slotId: string) => {
     const tile = data.settings.tiles.find((t) => t.id === tileId);
@@ -82,7 +81,7 @@ function Planner() {
       category: tile.category,
     });
     setPickedTileId(null);
-    toast.success(`${tile.subject} به ${DAY_NAMES[dayIndex]} اضافه شد`);
+    toast.success(`${tile.subject} به ${dayNames[dayIndex]} اضافه شد`);
   };
 
   const handleCellActivate = (dayIndex: number, slotId: string) => {
@@ -133,7 +132,11 @@ function Planner() {
     <>
       <section className="rounded-xl border bg-card p-4 shadow-xs">
         <h2 className="mb-3 text-sm font-semibold">تقویم</h2>
-        <JalaliCalendar weekStart={weekStart} onSelect={planner.setWeekStart} />
+        <JalaliCalendar
+          weekStart={weekStart}
+          weekStartsOn={weekStartsOn}
+          onSelect={planner.setWeekStart}
+        />
       </section>
       <section className="rounded-xl border bg-card p-4 shadow-xs">
         <WeekSummary activities={week.activities} />
@@ -145,7 +148,7 @@ function Planner() {
     <>
       {isMobile ? (
         <div className="no-print mb-3 flex gap-1 overflow-x-auto">
-          {DAY_NAMES.map((name, i) => (
+          {dayNames.map((name, i) => (
             <button
               key={name}
               type="button"
@@ -175,6 +178,7 @@ function Planner() {
         slots={slots}
         activities={week.activities}
         weekStart={weekStart}
+        weekStartsOn={weekStartsOn}
         visibleDays={visibleDays}
         pickedTileId={pickedTileId}
         onCellActivate={handleCellActivate}
@@ -209,12 +213,14 @@ function Planner() {
           studentName={data.settings.studentName}
           weekLabel={week.label}
           weekStart={weekStart}
+          weekStartsOn={weekStartsOn}
           activities={week.activities}
           theme={data.settings.theme}
           onStudentName={planner.setStudentName}
           onWeekLabel={planner.setWeekLabel}
-          onShiftWeek={(weeks) => planner.setWeekStart(addDays(weekStart, weeks * 7))}
-          onToday={() => planner.setWeekStart(startOfPersianWeek(new Date()))}
+          onWeekStartsOn={planner.setWeekStartsOn}
+          onShiftWeek={(weeks) => planner.setWeekStart(shiftWeek(weekStart, weeks))}
+          onToday={() => planner.setWeekStart(new Date())}
           onClearWeek={handleClearWeek}
           onThemeToggle={() => planner.setTheme(data.settings.theme === "dark" ? "light" : "dark")}
           onPrint={() => window.print()}
@@ -321,6 +327,7 @@ function Planner() {
               <>
                 <JalaliCalendar
                   weekStart={weekStart}
+                  weekStartsOn={weekStartsOn}
                   onSelect={(date) => {
                     planner.setWeekStart(date);
                     setMobilePanel(null);
@@ -336,6 +343,7 @@ function Planner() {
       <ActivityEditor
         target={target}
         slots={slots}
+        weekStartsOn={weekStartsOn}
         onClose={() => setTarget(null)}
         onCreate={(draft) => planner.addActivity(draft)}
         onUpdate={(id, draft) => planner.updateActivity(id, draft)}

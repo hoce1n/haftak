@@ -6,13 +6,21 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CATEGORY_STYLES } from "@/components/planner/category";
 import { cn } from "@/lib/utils";
-import { DAY_NAMES, addDays, formatHours, formatJalali, toPersianDigits } from "@/lib/jalali";
+import {
+  addDays,
+  formatHours,
+  formatJalali,
+  toPersianDigits,
+  weekDayNames,
+  type WeekStartDay,
+} from "@/lib/jalali";
 import { CATEGORY_LABELS, type Activity, type Slot } from "@/lib/planner-types";
 
 type Props = {
   slots: Slot[];
   activities: Activity[];
   weekStart: Date;
+  weekStartsOn?: WeekStartDay;
   visibleDays: number[];
   pickedTileId: string | null;
   onCellActivate: (dayIndex: number, slotId: string) => void;
@@ -26,6 +34,7 @@ export function WeekGrid({
   slots,
   activities,
   weekStart,
+  weekStartsOn = 0,
   visibleDays,
   pickedTileId,
   onCellActivate,
@@ -35,6 +44,7 @@ export function WeekGrid({
   onSlotChange,
 }: Props) {
   const [hoverCell, setHoverCell] = useState<string | null>(null);
+  const dayNames = weekDayNames(weekStartsOn);
 
   const dayTotal = (dayIndex: number) =>
     activities.filter((a) => a.dayIndex === dayIndex).reduce((sum, a) => sum + a.duration, 0);
@@ -72,7 +82,7 @@ export function WeekGrid({
           return (
             <div key={dayIndex} className="contents">
               <div className="flex h-full flex-col justify-center rounded-lg border border-primary/40 bg-muted/70 px-2.5 py-3 text-right">
-                <div className="text-sm font-semibold">{DAY_NAMES[dayIndex]}</div>
+                <div className="text-sm font-semibold">{dayNames[dayIndex]}</div>
                 <div className="text-[11px] text-muted-foreground">{formatJalali(date)}</div>
               </div>
               {slots.map((slot) => {
@@ -119,7 +129,7 @@ export function WeekGrid({
                             ? "opacity-0 group-hover/cell:opacity-100 focus-visible:opacity-100"
                             : "flex-1",
                         )}
-                        aria-label={`افزودن فعالیت به ${DAY_NAMES[dayIndex]} — ${slot.title}`}
+                        aria-label={`افزودن فعالیت به ${dayNames[dayIndex]} — ${slot.title}`}
                       >
                         <Plus className="size-3.5" />
                         {pickedTileId ? "اینجا قرار بده" : "افزودن"}
