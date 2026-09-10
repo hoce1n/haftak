@@ -76,7 +76,7 @@ function Planner() {
       slotId,
       subject: tile.subject,
       topic: tile.topic,
-      details: "",
+      details: tile.description,
       duration: tile.duration,
       category: tile.category,
     });
@@ -201,6 +201,7 @@ function Planner() {
         pickedTileId={pickedTileId}
         onPick={setPickedTileId}
         onAdd={planner.addTile}
+        onUpdate={planner.updateTile}
         onRemove={planner.removeTile}
       />
     </div>
@@ -321,6 +322,7 @@ function Planner() {
                   setMobilePanel(null);
                 }}
                 onAdd={planner.addTile}
+                onUpdate={planner.updateTile}
                 onRemove={planner.removeTile}
               />
             ) : (

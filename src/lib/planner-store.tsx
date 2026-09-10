@@ -42,6 +42,7 @@ type PlannerContextValue = {
   removeActivity: (id: string) => void;
   toggleActivity: (id: string) => void;
   addTile: (tile: Omit<Tile, "id">) => void;
+  updateTile: (id: string, patch: Partial<Omit<Tile, "id">>) => void;
   removeTile: (id: string) => void;
   setQuotes: (quotes: string[]) => void;
   clearWeek: () => void;

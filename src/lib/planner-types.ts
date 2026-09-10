@@ -35,6 +35,8 @@ export type Tile = {
   id: string;
   subject: string;
   topic: string;
+  /** Optional شرح shown in the library and copied into activity details on drop. */
+  description: string;
   duration: number;
   category: Category;
 };
@@ -94,12 +96,34 @@ export function defaultTiles(): Tile[] {
       id: "tile-1",
       subject: "زیست‌شناسی",
       topic: "مطالعه مفهومی",
+      description: "",
       duration: 90,
       category: "study",
     },
-    { id: "tile-2", subject: "ریاضیات", topic: "حل تست آموزشی", duration: 60, category: "test" },
-    { id: "tile-3", subject: "شیمی", topic: "مرور خلاصه‌ها", duration: 45, category: "review" },
-    { id: "tile-4", subject: "عربی", topic: "لغت و قواعد", duration: 30, category: "memorize" },
+    {
+      id: "tile-2",
+      subject: "ریاضیات",
+      topic: "حل تست آموزشی",
+      description: "",
+      duration: 60,
+      category: "test",
+    },
+    {
+      id: "tile-3",
+      subject: "شیمی",
+      topic: "مرور خلاصه‌ها",
+      description: "",
+      duration: 45,
+      category: "review",
+    },
+    {
+      id: "tile-4",
+      subject: "عربی",
+      topic: "لغت و قواعد",
+      description: "",
+      duration: 30,
+      category: "memorize",
+    },
   ];
 }
 
