@@ -18,7 +18,7 @@ export const JALALI_MONTHS = [
   "اسفند",
 ] as const;
 
-/** Persian week order: Saturday first. */
+/** Persian weekday names, Saturday-first. Index 0 = Saturday … 6 = Friday. */
 export const DAY_NAMES = [
   "شنبه",
   "یکشنبه",
@@ -28,6 +28,11 @@ export const DAY_NAMES = [
   "پنجشنبه",
   "جمعه",
 ] as const;
+
+/** Persian day index of the first day of the week. 0 = Saturday … 6 = Friday. */
+export type WeekStartDay = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export const WEEK_START_DAYS: WeekStartDay[] = [0, 1, 2, 3, 4, 5, 6];
 
 export type JalaliDate = { jy: number; jm: number; jd: number };
 
@@ -39,7 +44,7 @@ function isGregorianLeap(gy: number) {
 
 export function toJalali(gy: number, gm: number, gd: number): JalaliDate {
   let jy = gy <= 1600 ? 0 : 979;
-  let year = gy - (gy <= 1600 ? 621 : 1600);
+  const year = gy - (gy <= 1600 ? 621 : 1600);
   const year2 = gm > 2 ? year + 1 : year;
   let days =
     365 * year +
@@ -113,16 +118,49 @@ export function dateToJalali(date: Date): JalaliDate {
   return toJalali(date.getFullYear(), date.getMonth() + 1, date.getDate());
 }
 
+export function normalizeWeekStartDay(value: unknown): WeekStartDay {
+  const n = Math.round(Number(value));
+  if (n >= 0 && n <= 6) return n as WeekStartDay;
+  return 0;
+}
+
 /** 0 = Saturday … 6 = Friday */
 export function persianDayIndex(date: Date) {
   return (date.getDay() + 1) % 7;
 }
 
-/** The Saturday that starts the week containing `date`, normalised to midday. */
-export function startOfPersianWeek(date: Date) {
+/** 0 = configured week-start day … 6 = last day of that week. */
+export function weekDayIndex(date: Date, weekStartsOn: WeekStartDay = 0) {
+  return (persianDayIndex(date) - weekStartsOn + 7) % 7;
+}
+
+export function weekDayNames(weekStartsOn: WeekStartDay = 0): Array<(typeof DAY_NAMES)[number]> {
+  return [...DAY_NAMES.slice(weekStartsOn), ...DAY_NAMES.slice(0, weekStartsOn)];
+}
+
+/** The configured week-start day of the week containing `date`, normalised to midday. */
+export function startOfWeek(date: Date, weekStartsOn: WeekStartDay = 0) {
   const d = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0, 0);
-  d.setDate(d.getDate() - persianDayIndex(d));
+  d.setDate(d.getDate() - weekDayIndex(d, weekStartsOn));
   return d;
+}
+
+/** The Saturday that starts the Persian week containing `date`, normalised to midday. */
+export function startOfPersianWeek(date: Date) {
+  return startOfWeek(date, 0);
+}
+
+export function weekDates(weekStart: Date) {
+  return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+}
+
+export function isDateInWeek(date: Date, weekStart: Date) {
+  const key = dateKey(date);
+  return weekDates(weekStart).some((d) => dateKey(d) === key);
+}
+
+export function shiftWeek(weekStart: Date, weeks: number) {
+  return addDays(weekStart, weeks * 7);
 }
 
 export function addDays(date: Date, amount: number) {

@@ -10,7 +10,7 @@ import {
   type Slot,
   type Tile,
 } from "./planner-types";
-import { dateKey, startOfPersianWeek } from "./jalali";
+import { dateKey, normalizeWeekStartDay, startOfWeek } from "./jalali";
 
 export const STORAGE_KEY = "studyPlanner_v3";
 const LEGACY_KEY = "konkurPlan_v2";
@@ -110,7 +110,7 @@ function migrateLegacy(raw: unknown): PlannerData | null {
         .map((t, i) => normalizeActivity(t, slots, i))
         .filter((a): a is Activity => a !== null)
     : [];
-  const key = dateKey(startOfPersianWeek(new Date()));
+  const key = dateKey(startOfWeek(new Date(), 0));
   const quotes = Array.isArray(o["quotes"])
     ? o["quotes"].filter((q): q is string => typeof q === "string" && q.trim().length > 0)
     : [];
@@ -122,6 +122,7 @@ function migrateLegacy(raw: unknown): PlannerData | null {
       tiles: normalizeTiles(o["presets"]),
       quotes: quotes.length ? quotes : DEFAULT_QUOTES,
       theme: "light",
+      weekStartsOn: 0,
     },
     weeks: { [key]: { label: str(o["week"]), activities } },
   };
@@ -158,6 +159,7 @@ export function normalizeData(raw: unknown): PlannerData {
       tiles: normalizeTiles(settingsRaw["tiles"]),
       quotes: quotes.length ? quotes : DEFAULT_QUOTES,
       theme: settingsRaw["theme"] === "dark" ? "dark" : "light",
+      weekStartsOn: normalizeWeekStartDay(settingsRaw["weekStartsOn"]),
     },
     weeks,
   };

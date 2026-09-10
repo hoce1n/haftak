@@ -1,4 +1,4 @@
-import { toPersianDigits } from "./jalali";
+import { toPersianDigits, type WeekStartDay } from "./jalali";
 
 export const CATEGORIES = ["study", "review", "test", "memorize"] as const;
 
@@ -21,7 +21,7 @@ export type Slot = {
 
 export type Activity = {
   id: string;
-  dayIndex: number; // 0 = Saturday
+  dayIndex: number; // 0 = first day of the configured week
   slotId: string;
   subject: string;
   topic: string;
@@ -52,6 +52,8 @@ export type PlannerSettings = {
   tiles: Tile[];
   quotes: string[];
   theme: "light" | "dark";
+  /** 0 = Saturday … 6 = Friday. Source of truth for week calculation. */
+  weekStartsOn: WeekStartDay;
 };
 
 export type PlannerData = {
@@ -134,6 +136,7 @@ export function defaultData(): PlannerData {
       tiles: defaultTiles(),
       quotes: DEFAULT_QUOTES,
       theme: "light",
+      weekStartsOn: 0,
     },
     weeks: {},
   };

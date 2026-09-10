@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { dateKey, startOfPersianWeek } from "./jalali";
+import { dateKey, isDateInWeek, startOfWeek, type WeekStartDay } from "./jalali";
 import { loadData, normalizeData, saveData } from "./planner-storage";
 import {
   createId,
@@ -30,7 +30,9 @@ type PlannerContextValue = {
   weekStart: Date;
   weekKey: string;
   week: WeekPlan;
+  weekStartsOn: WeekStartDay;
   setWeekStart: (date: Date) => void;
+  setWeekStartsOn: (day: WeekStartDay) => void;
   setStudentName: (name: string) => void;
   setWeekLabel: (label: string) => void;
   setTheme: (theme: "light" | "dark") => void;
@@ -53,9 +55,10 @@ const PlannerContext = createContext<PlannerContextValue | null>(null);
 
 export function PlannerProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<PlannerData>(() => defaultData());
-  const [weekStart, setWeekStartState] = useState<Date>(() => startOfPersianWeek(new Date()));
+  const [weekStart, setWeekStartState] = useState<Date>(() => startOfWeek(new Date(), 0));
   const [ready, setReady] = useState(false);
   const hydrated = useRef(false);
+  const weekStartsOn = data.settings.weekStartsOn;
 
   useEffect(() => {
     setData(loadData());
@@ -72,6 +75,14 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     if (typeof document === "undefined") return;
     document.documentElement.classList.toggle("dark", data.settings.theme === "dark");
   }, [data.settings.theme]);
+
+  useEffect(() => {
+    setWeekStartState((current) => {
+      const anchor = isDateInWeek(new Date(), current) ? new Date() : current;
+      const next = startOfWeek(anchor, weekStartsOn);
+      return dateKey(next) === dateKey(current) ? current : next;
+    });
+  }, [weekStartsOn]);
 
   const weekKey = dateKey(weekStart);
   const week = data.weeks[weekKey] ?? emptyWeek();
@@ -93,7 +104,10 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       weekStart,
       weekKey,
       week,
-      setWeekStart: (date) => setWeekStartState(startOfPersianWeek(date)),
+      weekStartsOn,
+      setWeekStart: (date) => setWeekStartState(startOfWeek(date, weekStartsOn)),
+      setWeekStartsOn: (day) =>
+        setData((prev) => ({ ...prev, settings: { ...prev.settings, weekStartsOn: day } })),
       setStudentName: (studentName) =>
         setData((prev) => ({ ...prev, settings: { ...prev.settings, studentName } })),
       setWeekLabel: (label) => mutateWeek((w) => ({ ...w, label })),
@@ -134,14 +148,6 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
             tiles: [...prev.settings.tiles, { ...tile, id: createId() }],
           },
         })),
-      updateTile: (id, patch) =>
-        setData((prev) => ({
-          ...prev,
-          settings: {
-            ...prev.settings,
-            tiles: prev.settings.tiles.map((t) => (t.id === id ? { ...t, ...patch } : t)),
-          },
-        })),
       removeTile: (id) =>
         setData((prev) => ({
           ...prev,
@@ -161,7 +167,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
         }
       },
     };
-  }, [data, mutateWeek, ready, week, weekKey, weekStart]);
+  }, [data, mutateWeek, ready, week, weekKey, weekStart, weekStartsOn]);
 
   return <PlannerContext.Provider value={value}>{children}</PlannerContext.Provider>;
 }

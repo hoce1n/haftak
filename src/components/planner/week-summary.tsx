@@ -15,9 +15,7 @@ export function WeekSummary({ activities }: { activities: Activity[] }) {
 
   const byCategory = CATEGORIES.map((category) => ({
     category,
-    minutes: activities
-      .filter((a) => a.category === category)
-      .reduce((s, a) => s + a.duration, 0),
+    minutes: activities.filter((a) => a.category === category).reduce((s, a) => s + a.duration, 0),
   })).filter((c) => c.minutes > 0);
 
   return (
