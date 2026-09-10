@@ -69,6 +69,7 @@ function normalizeTiles(raw: unknown): Tile[] {
       id: str(t["id"], `tile-${i + 1}`) || `tile-${i + 1}`,
       subject: str(t["subject"], "بدون عنوان"),
       topic: str(t["topic"]),
+      description: str(t["description"] ?? t["details"]),
       duration: num(t["duration"], 60),
       category: isCategory(t["category"])
         ? t["category"]

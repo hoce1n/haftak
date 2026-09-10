@@ -40,6 +40,7 @@ type PlannerContextValue = {
   removeActivity: (id: string) => void;
   toggleActivity: (id: string) => void;
   addTile: (tile: Omit<Tile, "id">) => void;
+  updateTile: (id: string, patch: Partial<Omit<Tile, "id">>) => void;
   removeTile: (id: string) => void;
   setQuotes: (quotes: string[]) => void;
   clearWeek: () => void;
@@ -108,7 +109,10 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       addActivity: (activity) =>
         mutateWeek((w) => ({
           ...w,
-          activities: [...w.activities, { ...activity, done: activity.done ?? false, id: createId() }],
+          activities: [
+            ...w.activities,
+            { ...activity, done: activity.done ?? false, id: createId() },
+          ],
         })),
       updateActivity: (id, patch) =>
         mutateWeek((w) => ({
@@ -125,7 +129,18 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       addTile: (tile) =>
         setData((prev) => ({
           ...prev,
-          settings: { ...prev.settings, tiles: [...prev.settings.tiles, { ...tile, id: createId() }] },
+          settings: {
+            ...prev.settings,
+            tiles: [...prev.settings.tiles, { ...tile, id: createId() }],
+          },
+        })),
+      updateTile: (id, patch) =>
+        setData((prev) => ({
+          ...prev,
+          settings: {
+            ...prev.settings,
+            tiles: prev.settings.tiles.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+          },
         })),
       removeTile: (id) =>
         setData((prev) => ({
