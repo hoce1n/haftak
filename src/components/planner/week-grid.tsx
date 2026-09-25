@@ -14,6 +14,11 @@ import {
   weekDayNames,
   type WeekStartDay,
 } from "@/lib/jalali";
+import {
+  formatOccasionTitles,
+  getIranianOccasionsForDate,
+  hasIranianHoliday,
+} from "@/lib/iranian-occasions";
 import { CATEGORY_LABELS, type Activity, type Slot } from "@/lib/planner-types";
 
 type Props = {
@@ -79,11 +84,24 @@ export function WeekGrid({
         {visibleDays.map((dayIndex) => {
           const date = addDays(weekStart, dayIndex);
           const minutes = dayTotal(dayIndex);
+          const occasions = getIranianOccasionsForDate(date);
+          const holiday = hasIranianHoliday(occasions);
           return (
             <div key={dayIndex} className="contents">
               <div className="flex h-full flex-col justify-center rounded-lg border border-primary/40 bg-muted/70 px-2.5 py-3 text-right">
                 <div className="text-sm font-semibold">{dayNames[dayIndex]}</div>
                 <div className="text-[11px] text-muted-foreground">{formatJalali(date)}</div>
+                {occasions.length > 0 ? (
+                  <div
+                    className={cn(
+                      "mt-1 line-clamp-2 text-[10px] leading-4",
+                      holiday ? "text-destructive/80" : "text-muted-foreground/80",
+                    )}
+                  >
+                    {holiday ? "تعطیل رسمی · " : null}
+                    {formatOccasionTitles(occasions)}
+                  </div>
+                ) : null}
               </div>
               {slots.map((slot) => {
                 const cellKey = `${dayIndex}-${slot.id}`;
