@@ -31,6 +31,24 @@ export type Activity = {
   done: boolean;
 };
 
+export const TILE_CATEGORY_COLORS = [
+  "red",
+  "orange",
+  "yellow",
+  "green",
+  "blue",
+  "purple",
+  "pink",
+] as const;
+
+export type TileCategoryColor = (typeof TILE_CATEGORY_COLORS)[number];
+
+export type TileCategory = {
+  id: string;
+  label: string;
+  color: TileCategoryColor;
+};
+
 export type Tile = {
   id: string;
   subject: string;
@@ -38,8 +56,20 @@ export type Tile = {
   /** Optional شرح shown in the library and copied into activity details on drop. */
   description: string;
   duration: number;
-  category: Category;
+  categoryId: string;
 };
+
+export function isCategory(value: unknown): value is Category {
+  return typeof value === "string" && (CATEGORIES as readonly string[]).includes(value);
+}
+
+export function isTileCategoryColor(value: unknown): value is TileCategoryColor {
+  return typeof value === "string" && (TILE_CATEGORY_COLORS as readonly string[]).includes(value);
+}
+
+export function activityCategoryFromTile(tile: Pick<Tile, "categoryId">): Category {
+  return isCategory(tile.categoryId) ? tile.categoryId : "study";
+}
 
 export type WeekPlan = {
   label: string;
@@ -50,6 +80,7 @@ export type PlannerSettings = {
   studentName: string;
   slots: Slot[];
   tiles: Tile[];
+  tileCategories: TileCategory[];
   quotes: string[];
   theme: "light" | "dark";
   /** 0 = Saturday … 6 = Friday. Source of truth for week calculation. */
@@ -90,6 +121,15 @@ export function defaultSlots(): Slot[] {
   }));
 }
 
+export function defaultTileCategories(): TileCategory[] {
+  return [
+    { id: "study", label: "مطالعه", color: "yellow" },
+    { id: "review", label: "مرور", color: "orange" },
+    { id: "test", label: "تست", color: "green" },
+    { id: "memorize", label: "حفظیات", color: "blue" },
+  ];
+}
+
 export function defaultTiles(): Tile[] {
   return [
     {
@@ -98,7 +138,7 @@ export function defaultTiles(): Tile[] {
       topic: "مطالعه مفهومی",
       description: "",
       duration: 90,
-      category: "study",
+      categoryId: "study",
     },
     {
       id: "tile-2",
@@ -106,7 +146,7 @@ export function defaultTiles(): Tile[] {
       topic: "حل تست آموزشی",
       description: "",
       duration: 60,
-      category: "test",
+      categoryId: "test",
     },
     {
       id: "tile-3",
@@ -114,7 +154,7 @@ export function defaultTiles(): Tile[] {
       topic: "مرور خلاصه‌ها",
       description: "",
       duration: 45,
-      category: "review",
+      categoryId: "review",
     },
     {
       id: "tile-4",
@@ -122,7 +162,7 @@ export function defaultTiles(): Tile[] {
       topic: "لغت و قواعد",
       description: "",
       duration: 30,
-      category: "memorize",
+      categoryId: "memorize",
     },
   ];
 }
@@ -134,6 +174,7 @@ export function defaultData(): PlannerData {
       studentName: "",
       slots: defaultSlots(),
       tiles: defaultTiles(),
+      tileCategories: defaultTileCategories(),
       quotes: DEFAULT_QUOTES,
       theme: "light",
       weekStartsOn: 0,

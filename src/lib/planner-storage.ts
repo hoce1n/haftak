@@ -1,14 +1,17 @@
 import {
-  CATEGORIES,
   DEFAULT_QUOTES,
   defaultData,
   defaultSlots,
+  defaultTileCategories,
   defaultTiles,
+  isCategory,
+  isTileCategoryColor,
   type Activity,
   type Category,
   type PlannerData,
   type Slot,
   type Tile,
+  type TileCategory,
 } from "./planner-types";
 import { dateKey, normalizeWeekStartDay, startOfWeek } from "./jalali";
 
@@ -23,10 +26,6 @@ const LEGACY_COLOR_CATEGORY: Record<string, Category> = {
   "#d9e8f5": "memorize",
   "#d9ead3": "study",
 };
-
-function isCategory(value: unknown): value is Category {
-  return typeof value === "string" && (CATEGORIES as readonly string[]).includes(value);
-}
 
 function num(value: unknown, fallback: number) {
   const n = Number(value);
@@ -61,6 +60,56 @@ function remapActivitySlot(slotId: string, slots: Slot[]) {
   return slots[slots.length - 1]?.id || slots[0]!.id;
 }
 
+function fallbackTileCategoryId(raw: Record<string, unknown>): string {
+  if (typeof raw["categoryId"] === "string" && raw["categoryId"]) return raw["categoryId"];
+  if (isCategory(raw["category"])) return raw["category"];
+  return LEGACY_COLOR_CATEGORY[str(raw["color"]).toLowerCase()] ?? "study";
+}
+
+function normalizeTileCategories(raw: unknown, tiles: Tile[]): TileCategory[] {
+  const defaults = defaultTileCategories();
+  const seen = new Set<string>();
+  const categories: TileCategory[] = [];
+
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      if (!item || typeof item !== "object") continue;
+      const o = item as Record<string, unknown>;
+      const id = str(o["id"]);
+      const label = str(o["label"]).trim();
+      if (!id || !label || seen.has(id)) continue;
+      seen.add(id);
+      categories.push({
+        id,
+        label,
+        color: isTileCategoryColor(o["color"]) ? o["color"] : "blue",
+      });
+    }
+  }
+
+  if (categories.length === 0) {
+    for (const category of defaults) {
+      seen.add(category.id);
+      categories.push(category);
+    }
+  }
+
+  for (const tile of tiles) {
+    if (seen.has(tile.categoryId)) continue;
+    const fallback = defaults.find((category) => category.id === tile.categoryId);
+    categories.push(
+      fallback ?? {
+        id: tile.categoryId,
+        label: tile.categoryId,
+        color: "blue",
+      },
+    );
+    seen.add(tile.categoryId);
+  }
+
+  return categories;
+}
+
 function normalizeTiles(raw: unknown): Tile[] {
   if (!Array.isArray(raw)) return defaultTiles();
   return raw
@@ -71,9 +120,7 @@ function normalizeTiles(raw: unknown): Tile[] {
       topic: str(t["topic"]),
       description: str(t["description"] ?? t["details"]),
       duration: num(t["duration"], 60),
-      category: isCategory(t["category"])
-        ? t["category"]
-        : (LEGACY_COLOR_CATEGORY[str(t["color"]).toLowerCase()] ?? "study"),
+      categoryId: fallbackTileCategoryId(t),
     }));
 }
 
@@ -105,6 +152,7 @@ function migrateLegacy(raw: unknown): PlannerData | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
   const slots = normalizeSlots(o["slotTimes"]);
+  const tiles = normalizeTiles(o["presets"]);
   const activities = Array.isArray(o["tasks"])
     ? o["tasks"]
         .map((t, i) => normalizeActivity(t, slots, i))
@@ -119,7 +167,8 @@ function migrateLegacy(raw: unknown): PlannerData | null {
     settings: {
       studentName: str(o["student"]),
       slots,
-      tiles: normalizeTiles(o["presets"]),
+      tiles,
+      tileCategories: normalizeTileCategories(undefined, tiles),
       quotes: quotes.length ? quotes : DEFAULT_QUOTES,
       theme: "light",
       weekStartsOn: 0,
@@ -137,6 +186,8 @@ export function normalizeData(raw: unknown): PlannerData {
   const quotes = Array.isArray(settingsRaw["quotes"])
     ? settingsRaw["quotes"].filter((q): q is string => typeof q === "string" && q.trim().length > 0)
     : [];
+  const tiles = normalizeTiles(settingsRaw["tiles"]);
+  const tileCategories = normalizeTileCategories(settingsRaw["tileCategories"], tiles);
   const weeksRaw = (o["weeks"] ?? {}) as Record<string, unknown>;
   const weeks: PlannerData["weeks"] = {};
   for (const [key, value] of Object.entries(weeksRaw)) {
@@ -156,7 +207,8 @@ export function normalizeData(raw: unknown): PlannerData {
     settings: {
       studentName: str(settingsRaw["studentName"]),
       slots,
-      tiles: normalizeTiles(settingsRaw["tiles"]),
+      tiles,
+      tileCategories,
       quotes: quotes.length ? quotes : DEFAULT_QUOTES,
       theme: settingsRaw["theme"] === "dark" ? "dark" : "light",
       weekStartsOn: normalizeWeekStartDay(settingsRaw["weekStartsOn"]),
