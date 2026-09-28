@@ -88,7 +88,7 @@ export function WeekGrid({
           const holiday = hasIranianHoliday(occasions);
           return (
             <div key={dayIndex} className="contents">
-              <div className="flex h-full flex-col justify-center rounded-lg border border-primary/40 bg-muted/70 px-2.5 py-3 text-right">
+              <div className="flex h-full flex-col justify-center rounded-lg border border-primary/40 bg-muted/70 px-2.5 py-3 text-center">
                 <div className="text-sm font-semibold">{dayNames[dayIndex]}</div>
                 <div className="text-[11px] text-muted-foreground">{formatJalali(date)}</div>
                 {occasions.length > 0 ? (

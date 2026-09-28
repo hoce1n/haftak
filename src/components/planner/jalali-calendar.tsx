@@ -108,7 +108,7 @@ export function JalaliCalendar({ weekStart, weekStartsOn = 0, onSelect }: Props)
                 onClick={() => onSelect(startOfWeek(date, weekStartsOn))}
                 aria-label={dayAriaLabel(jalali.jd, occasions, holiday)}
                 className={cn(
-                  "relative flex h-8 items-center justify-center rounded-md text-xs transition-colors",
+                  "relative flex h-8 w-full items-center justify-center rounded-md text-xs transition-colors",
                   "hover:bg-accent",
                   inWeek && "bg-primary/10 font-semibold text-primary hover:bg-primary/15",
                   !inWeek && holiday && "text-destructive",

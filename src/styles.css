@@ -190,6 +190,10 @@
 
 /* Print / PDF: transposed 7-day x 9-column week on one A4 landscape page. */
 @media print {
+  * {
+    color: black !important;
+  }
+  
   html,
   body {
     width: 100% !important;
