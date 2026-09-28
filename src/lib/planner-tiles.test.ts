@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { normalizeData } from "./planner-storage";
-import { defaultTiles, type Tile } from "./planner-types";
+import { activityCategoryFromTile, defaultTiles, type Tile } from "./planner-types";
 
 describe("tile library data", () => {
   test("loads tiles without description as empty شرح", () => {
@@ -18,7 +18,7 @@ describe("tile library data", () => {
       topic: "تست",
       description: "",
       duration: 45,
-      category: "test",
+      categoryId: "test",
     });
   });
 
@@ -39,6 +39,56 @@ describe("tile library data", () => {
       weeks: {},
     });
     expect(data.settings.tiles[0]?.description).toBe("حل تست‌های فصل سوم");
+  });
+
+  test("migrates legacy tile category onto a default tile category", () => {
+    const data = normalizeData({
+      settings: {
+        tiles: [{ id: "tile-1", subject: "شیمی", topic: "مرور", duration: 45, category: "review" }],
+      },
+      weeks: {},
+    });
+    expect(data.settings.tiles[0]?.categoryId).toBe("review");
+    expect(data.settings.tileCategories.map((c) => c.id)).toEqual(
+      expect.arrayContaining(["study", "review", "test", "memorize"]),
+    );
+    expect(data.settings.tileCategories.find((c) => c.id === "review")).toMatchObject({
+      label: "مرور",
+      color: "orange",
+    });
+  });
+
+  test("keeps custom tile categories and categoryId", () => {
+    const data = normalizeData({
+      settings: {
+        tileCategories: [{ id: "math", label: "ریاضی", color: "blue" }],
+        tiles: [
+          {
+            id: "tile-1",
+            subject: "مشتق",
+            topic: "",
+            description: "",
+            duration: 60,
+            categoryId: "math",
+          },
+        ],
+      },
+      weeks: {},
+    });
+    expect(data.settings.tileCategories).toEqual([{ id: "math", label: "ریاضی", color: "blue" }]);
+    expect(data.settings.tiles[0]?.categoryId).toBe("math");
+  });
+
+  test("creates a fallback category for unknown categoryId", () => {
+    const data = normalizeData({
+      settings: {
+        tileCategories: [{ id: "lang", label: "زبان", color: "green" }],
+        tiles: [{ id: "tile-1", subject: "حد", duration: 30, categoryId: "math" }],
+      },
+      weeks: {},
+    });
+    expect(data.settings.tiles[0]?.categoryId).toBe("math");
+    expect(data.settings.tileCategories.map((c) => c.id)).toEqual(["lang", "math"]);
   });
 
   test("updating a tile keeps the same id and does not duplicate", () => {
@@ -67,18 +117,19 @@ describe("tile library data", () => {
       topic: "حرکت",
       description: "حل تست‌های فصل سوم",
       duration: 90,
-      category: "test",
+      categoryId: "test",
     };
     const activity = {
       subject: tile.subject,
       topic: tile.topic,
       details: tile.description,
       duration: tile.duration,
-      category: tile.category,
+      category: activityCategoryFromTile(tile),
     };
     const laterTile = { ...tile, subject: "شیمی", description: "مرور خلاصه" };
     expect(activity.details).toBe("حل تست‌های فصل سوم");
     expect(activity.subject).toBe("فیزیک");
+    expect(activity.category).toBe("test");
     expect(laterTile.subject).toBe("شیمی");
     expect(activity.subject).not.toBe(laterTile.subject);
   });

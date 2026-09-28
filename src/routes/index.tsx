@@ -16,7 +16,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PlannerProvider, usePlanner } from "@/lib/planner-store";
 import { addDays, formatJalali, shiftWeek, weekDayIndex, weekDayNames } from "@/lib/jalali";
-import type { WeekPlan } from "@/lib/planner-types";
+import { activityCategoryFromTile, type WeekPlan } from "@/lib/planner-types";
 import { cn } from "@/lib/utils";
 
 const RESIZE_HANDLE_CLASS =
@@ -78,7 +78,7 @@ function Planner() {
       topic: tile.topic,
       details: tile.description,
       duration: tile.duration,
-      category: tile.category,
+      category: activityCategoryFromTile(tile),
     });
     setPickedTileId(null);
     toast.success(`${tile.subject} به ${dayNames[dayIndex]} اضافه شد`);
@@ -198,11 +198,15 @@ function Planner() {
     <div className="rounded-xl border bg-card p-4 shadow-xs">
       <TilesPanel
         tiles={data.settings.tiles}
+        tileCategories={data.settings.tileCategories}
         pickedTileId={pickedTileId}
         onPick={setPickedTileId}
         onAdd={planner.addTile}
         onUpdate={planner.updateTile}
         onRemove={planner.removeTile}
+        onAddCategory={planner.addTileCategory}
+        onUpdateCategory={planner.updateTileCategory}
+        onRemoveCategory={planner.removeTileCategory}
       />
     </div>
   );
@@ -316,6 +320,7 @@ function Planner() {
             {mobilePanel === "tiles" ? (
               <TilesPanel
                 tiles={data.settings.tiles}
+                tileCategories={data.settings.tileCategories}
                 pickedTileId={pickedTileId}
                 onPick={(id) => {
                   setPickedTileId(id);
@@ -324,6 +329,9 @@ function Planner() {
                 onAdd={planner.addTile}
                 onUpdate={planner.updateTile}
                 onRemove={planner.removeTile}
+                onAddCategory={planner.addTileCategory}
+                onUpdateCategory={planner.updateTileCategory}
+                onRemoveCategory={planner.removeTileCategory}
               />
             ) : (
               <>

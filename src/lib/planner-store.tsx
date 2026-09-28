@@ -19,6 +19,7 @@ import {
   type PlannerData,
   type Slot,
   type Tile,
+  type TileCategory,
   type WeekPlan,
 } from "./planner-types";
 
@@ -44,6 +45,9 @@ type PlannerContextValue = {
   addTile: (tile: Omit<Tile, "id">) => void;
   updateTile: (id: string, patch: Partial<Omit<Tile, "id">>) => void;
   removeTile: (id: string) => void;
+  addTileCategory: (category: Omit<TileCategory, "id">) => string;
+  updateTileCategory: (id: string, patch: Partial<Omit<TileCategory, "id">>) => void;
+  removeTileCategory: (id: string) => void;
   setQuotes: (quotes: string[]) => void;
   clearWeek: () => void;
   restoreSnapshot: (snapshot: WeekPlan) => void;
@@ -148,11 +152,57 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
             tiles: [...prev.settings.tiles, { ...tile, id: createId() }],
           },
         })),
+      updateTile: (id, patch) =>
+        setData((prev) => ({
+          ...prev,
+          settings: {
+            ...prev.settings,
+            tiles: prev.settings.tiles.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+          },
+        })),
       removeTile: (id) =>
         setData((prev) => ({
           ...prev,
           settings: { ...prev.settings, tiles: prev.settings.tiles.filter((t) => t.id !== id) },
         })),
+      addTileCategory: (category) => {
+        const id = createId();
+        setData((prev) => ({
+          ...prev,
+          settings: {
+            ...prev.settings,
+            tileCategories: [...prev.settings.tileCategories, { ...category, id }],
+          },
+        }));
+        return id;
+      },
+      updateTileCategory: (id, patch) =>
+        setData((prev) => ({
+          ...prev,
+          settings: {
+            ...prev.settings,
+            tileCategories: prev.settings.tileCategories.map((c) =>
+              c.id === id ? { ...c, ...patch } : c,
+            ),
+          },
+        })),
+      removeTileCategory: (id) =>
+        setData((prev) => {
+          const remaining = prev.settings.tileCategories.filter((c) => c.id !== id);
+          const fallbackId = remaining[0]?.id;
+          return {
+            ...prev,
+            settings: {
+              ...prev.settings,
+              tileCategories: remaining,
+              tiles: fallbackId
+                ? prev.settings.tiles.map((tile) =>
+                    tile.categoryId === id ? { ...tile, categoryId: fallbackId } : tile,
+                  )
+                : prev.settings.tiles.filter((tile) => tile.categoryId !== id),
+            },
+          };
+        }),
       setQuotes: (quotes) =>
         setData((prev) => ({ ...prev, settings: { ...prev.settings, quotes } })),
       clearWeek: () => mutateWeek((w) => ({ ...w, activities: [] })),
