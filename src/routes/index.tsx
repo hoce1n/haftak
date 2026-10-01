@@ -79,6 +79,7 @@ function Planner() {
       details: tile.description,
       duration: tile.duration,
       category: activityCategoryFromTile(tile),
+      tileCategoryId: tile.categoryId,
     });
     setPickedTileId(null);
     toast.success(`${tile.subject} به ${dayNames[dayIndex]} اضافه شد`);
@@ -177,6 +178,7 @@ function Planner() {
       <WeekGrid
         slots={slots}
         activities={week.activities}
+        tileCategories={data.settings.tileCategories}
         weekStart={weekStart}
         weekStartsOn={weekStartsOn}
         visibleDays={visibleDays}

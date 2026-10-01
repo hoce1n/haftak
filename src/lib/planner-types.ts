@@ -28,6 +28,8 @@ export type Activity = {
   details: string;
   duration: number; // minutes, independent of slot length
   category: Category;
+  /** Tile-library category copied on drop so the week grid can keep the tile color. */
+  tileCategoryId?: string;
   done: boolean;
 };
 

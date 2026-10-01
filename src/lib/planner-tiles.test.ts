@@ -125,12 +125,42 @@ describe("tile library data", () => {
       details: tile.description,
       duration: tile.duration,
       category: activityCategoryFromTile(tile),
+      tileCategoryId: tile.categoryId,
     };
     const laterTile = { ...tile, subject: "شیمی", description: "مرور خلاصه" };
     expect(activity.details).toBe("حل تست‌های فصل سوم");
     expect(activity.subject).toBe("فیزیک");
     expect(activity.category).toBe("test");
+    expect(activity.tileCategoryId).toBe("test");
     expect(laterTile.subject).toBe("شیمی");
     expect(activity.subject).not.toBe(laterTile.subject);
+  });
+
+  test("persists tileCategoryId on dropped activities", () => {
+    const data = normalizeData({
+      settings: {
+        tileCategories: [{ id: "math", label: "ریاضی", color: "blue" }],
+        tiles: [{ id: "tile-1", subject: "مشتق", duration: 60, categoryId: "math" }],
+      },
+      weeks: {
+        "2026-03-21": {
+          label: "",
+          activities: [
+            {
+              id: "a-1",
+              dayIndex: 0,
+              slotId: "slot-1",
+              subject: "مشتق",
+              topic: "",
+              details: "",
+              duration: 60,
+              category: "study",
+              tileCategoryId: "math",
+            },
+          ],
+        },
+      },
+    });
+    expect(data.weeks["2026-03-21"]?.activities[0]?.tileCategoryId).toBe("math");
   });
 });
