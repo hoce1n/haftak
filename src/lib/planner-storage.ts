@@ -133,6 +133,7 @@ function normalizeActivity(raw: unknown, slots: Slot[], index: number): Activity
     str(o["slotId"]) || slots[Math.min(slotIndex, slots.length - 1)]?.id || slots[0]!.id,
     slots,
   );
+  const tileCategoryId = str(o["tileCategoryId"]);
   return {
     id: str(o["id"], `a-${index}`) || `a-${index}`,
     dayIndex: Math.min(6, Math.max(0, Math.round(dayIndex))),
@@ -144,6 +145,7 @@ function normalizeActivity(raw: unknown, slots: Slot[], index: number): Activity
     category: isCategory(o["category"])
       ? o["category"]
       : (LEGACY_COLOR_CATEGORY[str(o["color"]).toLowerCase()] ?? "study"),
+    ...(tileCategoryId ? { tileCategoryId } : {}),
     done: Boolean(o["done"]),
   };
 }

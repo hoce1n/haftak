@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CATEGORY_STYLES } from "@/components/planner/category";
+import { TILE_CATEGORY_STYLES } from "@/components/planner/tile-category";
 import { cn } from "@/lib/utils";
 import {
   addDays,
@@ -19,11 +20,12 @@ import {
   getIranianOccasionsForDate,
   hasIranianHoliday,
 } from "@/lib/iranian-occasions";
-import { CATEGORY_LABELS, type Activity, type Slot } from "@/lib/planner-types";
+import { CATEGORY_LABELS, type Activity, type Slot, type TileCategory } from "@/lib/planner-types";
 
 type Props = {
   slots: Slot[];
   activities: Activity[];
+  tileCategories: TileCategory[];
   weekStart: Date;
   weekStartsOn?: WeekStartDay;
   visibleDays: number[];
@@ -38,6 +40,7 @@ type Props = {
 export function WeekGrid({
   slots,
   activities,
+  tileCategories,
   weekStart,
   weekStartsOn = 0,
   visibleDays,
@@ -133,6 +136,7 @@ export function WeekGrid({
                         <ActivityCard
                           key={activity.id}
                           activity={activity}
+                          tileCategories={tileCategories}
                           onSelect={() => onActivitySelect(activity)}
                           onToggle={() => onActivityToggle(activity.id)}
                         />
@@ -230,14 +234,20 @@ function SlotHeader({
 
 function ActivityCard({
   activity,
+  tileCategories,
   onSelect,
   onToggle,
 }: {
   activity: Activity;
+  tileCategories: TileCategory[];
   onSelect: () => void;
   onToggle: () => void;
 }) {
-  const styles = CATEGORY_STYLES[activity.category];
+  const tileCategory = tileCategories.find((c) => c.id === activity.tileCategoryId);
+  const styles = tileCategory
+    ? TILE_CATEGORY_STYLES[tileCategory.color]
+    : CATEGORY_STYLES[activity.category];
+  const chipLabel = tileCategory ? tileCategory.label : CATEGORY_LABELS[activity.category];
   return (
     <div
       className={cn(
@@ -270,7 +280,7 @@ function ActivityCard({
           </div>
         ) : null}
         <span className={cn("mt-1 inline-block rounded px-1.5 py-0.5 text-[10px]", styles.chip)}>
-          {CATEGORY_LABELS[activity.category]}
+          {chipLabel}
         </span>
       </button>
       <button

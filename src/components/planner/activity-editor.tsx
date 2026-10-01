@@ -28,6 +28,7 @@ type Draft = {
   details: string;
   duration: number;
   category: Category;
+  tileCategoryId?: string;
 };
 
 type Props = {
@@ -51,6 +52,7 @@ function draftFrom(target: EditorTarget, slots: Slot[]): Draft {
       details: a.details,
       duration: a.duration,
       category: a.category,
+      ...(a.tileCategoryId ? { tileCategoryId: a.tileCategoryId } : {}),
     };
   }
   return {
