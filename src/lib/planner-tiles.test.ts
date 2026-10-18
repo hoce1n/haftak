@@ -1,7 +1,13 @@
 import { describe, expect, test } from "bun:test";
 
 import { normalizeData } from "./planner-storage";
-import { activityCategoryFromTile, defaultTiles, type Tile } from "./planner-types";
+import {
+  activityCategoryFromTile,
+  addSavedTileColor,
+  defaultTiles,
+  normalizeSavedTileColors,
+  type Tile,
+} from "./planner-types";
 
 describe("tile library data", () => {
   test("loads tiles without description as empty شرح", () => {
@@ -162,5 +168,56 @@ describe("tile library data", () => {
       },
     });
     expect(data.weeks["2026-03-21"]?.activities[0]?.tileCategoryId).toBe("math");
+  });
+
+  test("persists custom hex colours on tile categories", () => {
+    const data = normalizeData({
+      settings: {
+        tileCategories: [
+          { id: "math", label: "ریاضی", color: "#12AB34" },
+          { id: "lang", label: "زبان", color: "#f0f" },
+        ],
+        tiles: [],
+      },
+      weeks: {},
+    });
+    expect(data.settings.tileCategories).toEqual([
+      { id: "math", label: "ریاضی", color: "#12ab34" },
+      { id: "lang", label: "زبان", color: "#ff00ff" },
+    ]);
+  });
+
+  test("falls back to the default colour for invalid values", () => {
+    const data = normalizeData({
+      settings: {
+        tileCategories: [{ id: "math", label: "ریاضی", color: "not-a-colour" }],
+        tiles: [],
+      },
+      weeks: {},
+    });
+    expect(data.settings.tileCategories[0]?.color).toBe("blue");
+  });
+
+  test("saves at most seven unique custom colours", () => {
+    const saved = [
+      "#111111",
+      "#222222",
+      "#333333",
+      "#444444",
+      "#555555",
+      "#666666",
+      "#777777",
+    ].reduce<string[]>((colors, color) => addSavedTileColor(colors, color), []);
+    expect(saved).toHaveLength(7);
+    expect(addSavedTileColor(saved, "#888888")).toEqual([
+      "#888888",
+      "#777777",
+      "#666666",
+      "#555555",
+      "#444444",
+      "#333333",
+      "#222222",
+    ]);
+    expect(normalizeSavedTileColors(["#abc", "#abc", "red", "nope"])).toEqual(["#aabbcc", "red"]);
   });
 });
