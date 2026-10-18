@@ -5,7 +5,8 @@ import {
   defaultTileCategories,
   defaultTiles,
   isCategory,
-  isTileCategoryColor,
+  normalizeSavedTileColors,
+  normalizeTileCategoryColor,
   type Activity,
   type Category,
   type PlannerData,
@@ -82,7 +83,7 @@ function normalizeTileCategories(raw: unknown, tiles: Tile[]): TileCategory[] {
       categories.push({
         id,
         label,
-        color: isTileCategoryColor(o["color"]) ? o["color"] : "blue",
+        color: normalizeTileCategoryColor(o["color"]),
       });
     }
   }
@@ -171,6 +172,7 @@ function migrateLegacy(raw: unknown): PlannerData | null {
       slots,
       tiles,
       tileCategories: normalizeTileCategories(undefined, tiles),
+      savedTileColors: [],
       quotes: quotes.length ? quotes : DEFAULT_QUOTES,
       theme: "light",
       weekStartsOn: 0,
@@ -211,6 +213,7 @@ export function normalizeData(raw: unknown): PlannerData {
       slots,
       tiles,
       tileCategories,
+      savedTileColors: normalizeSavedTileColors(settingsRaw["savedTileColors"]),
       quotes: quotes.length ? quotes : DEFAULT_QUOTES,
       theme: settingsRaw["theme"] === "dark" ? "dark" : "light",
       weekStartsOn: normalizeWeekStartDay(settingsRaw["weekStartsOn"]),

@@ -1,15 +1,21 @@
 import { GripVertical, Pencil, Plus, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { TILE_CATEGORY_STYLES } from "@/components/planner/tile-category";
+import {
+  TILE_COLOR_PRESETS,
+  tileCategoryStyles,
+  tileColorValue,
+} from "@/components/planner/tile-category";
 import { cn } from "@/lib/utils";
 import { toPersianDigits } from "@/lib/jalali";
 import {
-  TILE_CATEGORY_COLORS,
+  isTileCategoryColor,
+  normalizeTileCategoryColor,
+  tileColorHex,
   type Tile,
   type TileCategory,
   type TileCategoryColor,
@@ -40,6 +46,7 @@ function draftFrom(tile: Tile): TileDraft {
 type Props = {
   tiles: Tile[];
   tileCategories: TileCategory[];
+  savedTileColors: string[];
   pickedTileId: string | null;
   onPick: (id: string | null) => void;
   onAdd: (tile: TileDraft) => void;
@@ -48,11 +55,13 @@ type Props = {
   onAddCategory: (category: Omit<TileCategory, "id">) => string;
   onUpdateCategory: (id: string, patch: Partial<Omit<TileCategory, "id">>) => void;
   onRemoveCategory: (id: string) => void;
+  onSaveTileColor: (color: TileCategoryColor) => void;
 };
 
 export function TilesPanel({
   tiles,
   tileCategories,
+  savedTileColors,
   pickedTileId,
   onPick,
   onAdd,
@@ -61,6 +70,7 @@ export function TilesPanel({
   onAddCategory,
   onUpdateCategory,
   onRemoveCategory,
+  onSaveTileColor,
 }: Props) {
   const defaultCategoryId = tileCategories[0]?.id ?? "";
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -124,103 +134,101 @@ export function TilesPanel({
       ) : null}
 
       <div className="space-y-4">
-        {grouped.map(({ category, tiles: categoryTiles }) => (
-          <section key={category.id} className="space-y-1.5">
-            <div className="flex items-center gap-1.5 px-0.5">
-              <span
-                className={cn("size-2 rounded-full", TILE_CATEGORY_STYLES[category.color].dot)}
-                aria-hidden
-              />
-              <h3 className="min-w-0 flex-1 truncate text-[12px] font-semibold">
-                {category.label}
-              </h3>
-              <button
-                type="button"
-                onClick={() => startCreateIn(category.id)}
-                className="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
-                aria-label={`افزودن کاشی به ${category.label}`}
-              >
-                <Plus className="size-3.5" />
-              </button>
-            </div>
-            {categoryTiles.length === 0 ? (
-              <p className="rounded-md border border-dashed px-3 py-2 text-center text-[10px] text-muted-foreground">
-                کاشی‌ای در این دسته نیست.
-              </p>
-            ) : null}
-            {categoryTiles.map((tile) => {
-              const picked = pickedTileId === tile.id;
-              const isEditingThis = editingId === tile.id;
-              return (
-                <div
-                  key={tile.id}
-                  draggable={!isEditingThis}
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData("text/tile-id", tile.id);
-                    e.dataTransfer.effectAllowed = "copy";
-                  }}
-                  className={cn(
-                    "group relative flex cursor-grab items-start gap-2 overflow-hidden rounded-md border bg-card px-2 py-1.5",
-                    picked && "border-primary ring-1 ring-primary/40",
-                    isEditingThis && "border-primary/50",
-                  )}
+        {grouped.map(({ category, tiles: categoryTiles }) => {
+          const styles = tileCategoryStyles(category.color);
+          return (
+            <section key={category.id} className="space-y-1.5">
+              <div className="flex items-center gap-1.5 px-0.5">
+                <span className="size-2 rounded-full" style={styles.dot} aria-hidden />
+                <h3 className="min-w-0 flex-1 truncate text-[12px] font-semibold">
+                  {category.label}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => startCreateIn(category.id)}
+                  className="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                  aria-label={`افزودن کاشی به ${category.label}`}
                 >
-                  <span
-                    className={cn(
-                      "absolute inset-y-0 right-0 w-1",
-                      TILE_CATEGORY_STYLES[category.color].bar,
-                    )}
-                    aria-hidden
-                  />
-                  <GripVertical
-                    className="mt-0.5 size-3.5 shrink-0 text-muted-foreground"
-                    aria-hidden
-                  />
-                  <button
-                    type="button"
-                    onClick={() => onPick(picked ? null : tile.id)}
-                    className="min-w-0 flex-1 text-right"
-                    aria-pressed={picked}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span className="truncate text-[12px] font-semibold">{tile.subject}</span>
-                      <span className="shrink-0 text-[10px] text-muted-foreground">
-                        {toPersianDigits(tile.duration)}′
-                      </span>
-                    </div>
-                    <div className="truncate text-[11px] text-muted-foreground">
-                      {tile.topic || category.label}
-                    </div>
-                    {tile.description ? (
-                      <div className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-muted-foreground/80">
-                        {tile.description}
-                      </div>
-                    ) : null}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => startEdit(tile)}
-                    aria-label={`ویرایش کاشی ${tile.subject}`}
-                    className="shrink-0 rounded p-1 text-muted-foreground opacity-70 transition-opacity hover:bg-accent sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100"
-                  >
-                    <Pencil className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (editingId === tile.id) resetForm();
-                      onRemove(tile.id);
+                  <Plus className="size-3.5" />
+                </button>
+              </div>
+              {categoryTiles.length === 0 ? (
+                <p className="rounded-md border border-dashed px-3 py-2 text-center text-[10px] text-muted-foreground">
+                  کاشی‌ای در این دسته نیست.
+                </p>
+              ) : null}
+              {categoryTiles.map((tile) => {
+                const picked = pickedTileId === tile.id;
+                const isEditingThis = editingId === tile.id;
+                return (
+                  <div
+                    key={tile.id}
+                    draggable={!isEditingThis}
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData("text/tile-id", tile.id);
+                      e.dataTransfer.effectAllowed = "copy";
                     }}
-                    aria-label={`حذف کاشی ${tile.subject}`}
-                    className="shrink-0 rounded p-1 text-muted-foreground opacity-70 transition-opacity hover:bg-accent sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100"
+                    className={cn(
+                      "group relative flex cursor-grab items-start gap-2 overflow-hidden rounded-md border bg-card px-2 py-1.5",
+                      picked && "border-primary ring-1 ring-primary/40",
+                      isEditingThis && "border-primary/50",
+                    )}
                   >
-                    <X className="size-3.5" />
-                  </button>
-                </div>
-              );
-            })}
-          </section>
-        ))}
+                    <span
+                      className="absolute inset-y-0 right-0 w-1"
+                      style={styles.bar}
+                      aria-hidden
+                    />
+                    <GripVertical
+                      className="mt-0.5 size-3.5 shrink-0 text-muted-foreground"
+                      aria-hidden
+                    />
+                    <button
+                      type="button"
+                      onClick={() => onPick(picked ? null : tile.id)}
+                      className="min-w-0 flex-1 text-right"
+                      aria-pressed={picked}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span className="truncate text-[12px] font-semibold">{tile.subject}</span>
+                        <span className="shrink-0 text-[10px] text-muted-foreground">
+                          {toPersianDigits(tile.duration)}′
+                        </span>
+                      </div>
+                      <div className="truncate text-[11px] text-muted-foreground">
+                        {tile.topic || category.label}
+                      </div>
+                      {tile.description ? (
+                        <div className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-muted-foreground/80">
+                          {tile.description}
+                        </div>
+                      ) : null}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => startEdit(tile)}
+                      aria-label={`ویرایش کاشی ${tile.subject}`}
+                      className="shrink-0 rounded p-1 text-muted-foreground opacity-70 transition-opacity hover:bg-accent sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100"
+                    >
+                      <Pencil className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (editingId === tile.id) resetForm();
+                        onRemove(tile.id);
+                      }}
+                      aria-label={`حذف کاشی ${tile.subject}`}
+                      className="shrink-0 rounded p-1 text-muted-foreground opacity-70 transition-opacity hover:bg-accent sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+            </section>
+          );
+        })}
       </div>
 
       {tileCategories.length > 0 ? (
@@ -237,6 +245,7 @@ export function TilesPanel({
       <CategoryManager
         categories={tileCategories}
         tiles={tiles}
+        savedColors={savedTileColors}
         open={managing}
         onToggle={() => setManaging((open) => !open)}
         onAdd={onAddCategory}
@@ -245,6 +254,7 @@ export function TilesPanel({
           if (draft.categoryId === id) setDraft((prev) => ({ ...prev, categoryId: "" }));
           onRemoveCategory(id);
         }}
+        onSaveColor={onSaveTileColor}
       />
     </div>
   );
@@ -358,7 +368,7 @@ function TileCategoryPicker({
   return (
     <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="دسته‌بندی کاشی">
       {categories.map((category) => {
-        const styles = TILE_CATEGORY_STYLES[category.color];
+        const styles = tileCategoryStyles(category.color);
         const active = value === category.id;
         return (
           <button
@@ -374,7 +384,7 @@ function TileCategoryPicker({
                 : "border-input text-muted-foreground hover:bg-accent/60",
             )}
           >
-            <span className={cn("size-2 rounded-full", styles.dot)} aria-hidden />
+            <span className="size-2 rounded-full" style={styles.dot} aria-hidden />
             {category.label}
           </button>
         );
@@ -385,32 +395,142 @@ function TileCategoryPicker({
 
 function ColorPicker({
   value,
+  savedColors,
   onChange,
+  onSaveColor,
 }: {
   value: TileCategoryColor;
+  savedColors: string[];
   onChange: (color: TileCategoryColor) => void;
+  onSaveColor: (color: TileCategoryColor) => void;
 }) {
+  const [hexText, setHexText] = useState(() => tileColorHex(value));
+  const typingRef = useRef(false);
+
+  useEffect(() => {
+    if (!typingRef.current) setHexText(tileColorHex(value));
+  }, [value]);
+
+  const selectColor = (color: TileCategoryColor) => {
+    onChange(color);
+    setHexText(tileColorHex(color));
+  };
+
+  const applyHexText = () => {
+    typingRef.current = false;
+    if (isTileCategoryColor(hexText)) {
+      selectColor(normalizeTileCategoryColor(hexText));
+    } else {
+      setHexText(tileColorHex(value));
+    }
+  };
+
+  const changeHexText = (raw: string) => {
+    typingRef.current = true;
+    setHexText(raw);
+    if (isTileCategoryColor(raw)) {
+      onChange(normalizeTileCategoryColor(raw));
+    }
+  };
+
+  const saveColor = () => {
+    const color = isTileCategoryColor(hexText) ? normalizeTileCategoryColor(hexText) : value;
+    selectColor(color);
+    onSaveColor(color);
+  };
+
+  const invalidHex = !isTileCategoryColor(hexText);
+
   return (
-    <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="رنگ دسته">
-      {TILE_CATEGORY_COLORS.map((color) => {
-        const active = value === color;
-        return (
-          <button
-            key={color}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            aria-label={color}
-            onClick={() => onChange(color)}
-            className={cn(
-              "flex size-6 items-center justify-center rounded-full border",
-              active ? "border-foreground" : "border-transparent",
-            )}
-          >
-            <span className={cn("size-4 rounded-full", TILE_CATEGORY_STYLES[color].dot)} />
-          </button>
-        );
-      })}
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="رنگ دسته">
+        {TILE_COLOR_PRESETS.map(({ value: preset, label }) => {
+          const active = value === preset;
+          return (
+            <button
+              key={preset}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              aria-label={label}
+              title={label}
+              onClick={() => selectColor(preset)}
+              className={cn(
+                "flex size-6 items-center justify-center rounded-full border",
+                active ? "border-foreground" : "border-transparent",
+              )}
+            >
+              <span
+                className="size-4 rounded-full"
+                style={{ backgroundColor: tileColorValue(preset) }}
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1.5">
+        <input
+          type="color"
+          value={tileColorHex(value)}
+          onChange={(e) => selectColor(e.target.value)}
+          className="size-8 shrink-0 cursor-pointer rounded-md border border-input bg-background p-0.5"
+          aria-label="انتخاب رنگ با ورودی رنگ"
+        />
+        <Input
+          value={hexText}
+          onChange={(e) => changeHexText(e.target.value)}
+          onBlur={applyHexText}
+          onKeyDown={(e) => e.key === "Enter" && applyHexText()}
+          dir="ltr"
+          className={cn(
+            "h-8 w-24 font-mono text-[11px]",
+            invalidHex && "border-destructive focus-visible:ring-destructive",
+          )}
+          aria-label="کد رنگ"
+          aria-invalid={invalidHex}
+          placeholder="#5870a6"
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 shrink-0 px-2 text-[11px]"
+          onClick={saveColor}
+        >
+          ذخیره در پالت
+        </Button>
+      </div>
+
+      {savedColors.length > 0 ? (
+        <div className="space-y-1">
+          <span className="text-[10px] text-muted-foreground">رنگ‌های ذخیره‌شده</span>
+          <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="رنگ‌های ذخیره‌شده">
+            {savedColors.map((color) => {
+              const active = value === color;
+              return (
+                <button
+                  key={color}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  aria-label={`رنگ ${color}`}
+                  title={color}
+                  onClick={() => selectColor(color)}
+                  className={cn(
+                    "flex size-6 items-center justify-center rounded-full border",
+                    active ? "border-foreground" : "border-transparent",
+                  )}
+                >
+                  <span
+                    className="size-4 rounded-full"
+                    style={{ backgroundColor: tileColorValue(color) }}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -418,19 +538,23 @@ function ColorPicker({
 function CategoryManager({
   categories,
   tiles,
+  savedColors,
   open,
   onToggle,
   onAdd,
   onUpdate,
   onRemove,
+  onSaveColor,
 }: {
   categories: TileCategory[];
   tiles: Tile[];
+  savedColors: string[];
   open: boolean;
   onToggle: () => void;
   onAdd: (category: Omit<TileCategory, "id">) => string;
   onUpdate: (id: string, patch: Partial<Omit<TileCategory, "id">>) => void;
   onRemove: (id: string) => void;
+  onSaveColor: (color: TileCategoryColor) => void;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [label, setLabel] = useState("");
@@ -473,40 +597,40 @@ function CategoryManager({
               هنوز دسته‌ای نساخته‌اید.
             </p>
           ) : null}
-          {categories.map((category) => (
-            <div
-              key={category.id}
-              className="flex items-center gap-2 rounded-md border bg-card px-2 py-1.5"
-            >
-              <span
-                className={cn("size-2.5 rounded-full", TILE_CATEGORY_STYLES[category.color].dot)}
-                aria-hidden
-              />
-              <span className="min-w-0 flex-1 truncate text-[12px]">{category.label}</span>
-              <span className="text-[10px] text-muted-foreground">
-                {toPersianDigits(tileCount(category.id))}
-              </span>
-              <button
-                type="button"
-                onClick={() => startEdit(category)}
-                aria-label={`ویرایش دسته ${category.label}`}
-                className="rounded p-1 text-muted-foreground hover:bg-accent"
+          {categories.map((category) => {
+            const styles = tileCategoryStyles(category.color);
+            return (
+              <div
+                key={category.id}
+                className="flex items-center gap-2 rounded-md border bg-card px-2 py-1.5"
               >
-                <Pencil className="size-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (editingId === category.id) reset();
-                  onRemove(category.id);
-                }}
-                aria-label={`حذف دسته ${category.label}`}
-                className="rounded p-1 text-muted-foreground hover:bg-accent"
-              >
-                <X className="size-3.5" />
-              </button>
-            </div>
-          ))}
+                <span className="size-2.5 rounded-full" style={styles.dot} aria-hidden />
+                <span className="min-w-0 flex-1 truncate text-[12px]">{category.label}</span>
+                <span className="text-[10px] text-muted-foreground">
+                  {toPersianDigits(tileCount(category.id))}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => startEdit(category)}
+                  aria-label={`ویرایش دسته ${category.label}`}
+                  className="rounded p-1 text-muted-foreground hover:bg-accent"
+                >
+                  <Pencil className="size-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (editingId === category.id) reset();
+                    onRemove(category.id);
+                  }}
+                  aria-label={`حذف دسته ${category.label}`}
+                  className="rounded p-1 text-muted-foreground hover:bg-accent"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            );
+          })}
           <div className="space-y-2 rounded-md border border-dashed p-2">
             <Label htmlFor="tile-category-label" className="text-[11px]">
               {editingId ? "ویرایش دسته" : "دسته جدید"}
@@ -519,7 +643,12 @@ function CategoryManager({
               onChange={(e) => setLabel(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submit()}
             />
-            <ColorPicker value={color} onChange={setColor} />
+            <ColorPicker
+              value={color}
+              savedColors={savedColors}
+              onChange={setColor}
+              onSaveColor={onSaveColor}
+            />
             {editingId ? (
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1" size="sm" onClick={submit}>

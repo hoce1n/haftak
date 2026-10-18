@@ -201,6 +201,7 @@ function Planner() {
       <TilesPanel
         tiles={data.settings.tiles}
         tileCategories={data.settings.tileCategories}
+        savedTileColors={data.settings.savedTileColors}
         pickedTileId={pickedTileId}
         onPick={setPickedTileId}
         onAdd={planner.addTile}
@@ -209,6 +210,7 @@ function Planner() {
         onAddCategory={planner.addTileCategory}
         onUpdateCategory={planner.updateTileCategory}
         onRemoveCategory={planner.removeTileCategory}
+        onSaveTileColor={planner.saveTileColor}
       />
     </div>
   );
@@ -323,6 +325,7 @@ function Planner() {
               <TilesPanel
                 tiles={data.settings.tiles}
                 tileCategories={data.settings.tileCategories}
+                savedTileColors={data.settings.savedTileColors}
                 pickedTileId={pickedTileId}
                 onPick={(id) => {
                   setPickedTileId(id);
@@ -334,6 +337,7 @@ function Planner() {
                 onAddCategory={planner.addTileCategory}
                 onUpdateCategory={planner.updateTileCategory}
                 onRemoveCategory={planner.removeTileCategory}
+                onSaveTileColor={planner.saveTileColor}
               />
             ) : (
               <>

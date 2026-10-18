@@ -43,7 +43,34 @@ export const TILE_CATEGORY_COLORS = [
   "pink",
 ] as const;
 
-export type TileCategoryColor = (typeof TILE_CATEGORY_COLORS)[number];
+export const TILE_CATEGORY_COLOR_LABELS: Record<(typeof TILE_CATEGORY_COLORS)[number], string> = {
+  red: "قرمز",
+  orange: "نارنجی",
+  yellow: "زرد",
+  green: "سبز",
+  blue: "آبی",
+  purple: "بنفش",
+  pink: "صورتی",
+};
+
+/** Light-theme hex values used as the starting point of the custom colour input. */
+export const TILE_CATEGORY_COLOR_HEX: Record<(typeof TILE_CATEGORY_COLORS)[number], string> = {
+  red: "#e1514e",
+  orange: "#e0843e",
+  yellow: "#ad7b3d",
+  green: "#358264",
+  blue: "#5870a6",
+  purple: "#9460b7",
+  pink: "#d4609d",
+};
+
+export const MAX_SAVED_TILE_COLORS = 7;
+
+/**
+ * Named design tokens keep their light/dark theme behaviour, while custom
+ * colours are stored as regular hex strings.
+ */
+export type TileCategoryColor = string;
 
 export type TileCategory = {
   id: string;
@@ -61,12 +88,69 @@ export type Tile = {
   categoryId: string;
 };
 
-export function isCategory(value: unknown): value is Category {
-  return typeof value === "string" && (CATEGORIES as readonly string[]).includes(value);
+const HEX_COLOR_RE = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+const NAMED_TILE_COLORS = new Set<string>(TILE_CATEGORY_COLORS);
+
+function isNamedTileColor(value: string): value is (typeof TILE_CATEGORY_COLORS)[number] {
+  return NAMED_TILE_COLORS.has(value.toLowerCase());
+}
+
+function expandHexColor(color: string): string {
+  const lower = color.toLowerCase();
+  if (lower.length !== 4) return lower;
+  const r = lower.charAt(1);
+  const g = lower.charAt(2);
+  const b = lower.charAt(3);
+  return `#${r}${r}${g}${g}${b}${b}`;
 }
 
 export function isTileCategoryColor(value: unknown): value is TileCategoryColor {
-  return typeof value === "string" && (TILE_CATEGORY_COLORS as readonly string[]).includes(value);
+  if (typeof value !== "string") return false;
+  const color = value.trim();
+  return isNamedTileColor(color) || HEX_COLOR_RE.test(color);
+}
+
+export function normalizeTileCategoryColor(
+  value: unknown,
+  fallback: TileCategoryColor = "blue",
+): TileCategoryColor {
+  if (typeof value !== "string") return fallback;
+  const color = value.trim();
+  if (isNamedTileColor(color)) return color.toLowerCase();
+  if (HEX_COLOR_RE.test(color)) return expandHexColor(color);
+  return fallback;
+}
+
+/** A hex value accepted by <input type="color"> for both tokens and custom colours. */
+export function tileColorHex(value: TileCategoryColor): string {
+  const lower = value.toLowerCase();
+  if (isNamedTileColor(lower)) return TILE_CATEGORY_COLOR_HEX[lower];
+  return normalizeTileCategoryColor(value, TILE_CATEGORY_COLOR_HEX.blue);
+}
+
+export function normalizeSavedTileColors(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const colors: string[] = [];
+  for (const item of raw) {
+    const color = normalizeTileCategoryColor(item, "");
+    if (!color || seen.has(color)) continue;
+    seen.add(color);
+    colors.push(color);
+    if (colors.length >= MAX_SAVED_TILE_COLORS) break;
+  }
+  return colors;
+}
+
+export function addSavedTileColor(current: readonly string[], color: TileCategoryColor): string[] {
+  const normalized = normalizeTileCategoryColor(color, "");
+  if (!normalized) return normalizeSavedTileColors(current);
+  const rest = normalizeSavedTileColors(current).filter((item) => item !== normalized);
+  return [normalized, ...rest].slice(0, MAX_SAVED_TILE_COLORS);
+}
+
+export function isCategory(value: unknown): value is Category {
+  return typeof value === "string" && (CATEGORIES as readonly string[]).includes(value);
 }
 
 export function activityCategoryFromTile(tile: Pick<Tile, "categoryId">): Category {
@@ -83,6 +167,8 @@ export type PlannerSettings = {
   slots: Slot[];
   tiles: Tile[];
   tileCategories: TileCategory[];
+  /** Up to seven custom colours kept for quick reuse by the colour picker. */
+  savedTileColors: string[];
   quotes: string[];
   theme: "light" | "dark";
   /** 0 = Saturday … 6 = Friday. Source of truth for week calculation. */
@@ -177,6 +263,7 @@ export function defaultData(): PlannerData {
       slots: defaultSlots(),
       tiles: defaultTiles(),
       tileCategories: defaultTileCategories(),
+      savedTileColors: [],
       quotes: DEFAULT_QUOTES,
       theme: "light",
       weekStartsOn: 0,

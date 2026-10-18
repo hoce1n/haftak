@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CATEGORY_STYLES } from "@/components/planner/category";
-import { TILE_CATEGORY_STYLES } from "@/components/planner/tile-category";
+import { tileCategoryStyles } from "@/components/planner/tile-category";
 import { cn } from "@/lib/utils";
 import {
   addDays,
@@ -244,9 +244,8 @@ function ActivityCard({
   onToggle: () => void;
 }) {
   const tileCategory = tileCategories.find((c) => c.id === activity.tileCategoryId);
-  const styles = tileCategory
-    ? TILE_CATEGORY_STYLES[tileCategory.color]
-    : CATEGORY_STYLES[activity.category];
+  const tileStyles = tileCategory ? tileCategoryStyles(tileCategory.color) : null;
+  const categoryStyles = tileCategory ? null : CATEGORY_STYLES[activity.category];
   const chipLabel = tileCategory ? tileCategory.label : CATEGORY_LABELS[activity.category];
   return (
     <div
@@ -255,7 +254,11 @@ function ActivityCard({
         activity.done && "opacity-60",
       )}
     >
-      <span className={cn("absolute inset-y-0 right-0 w-1", styles.bar)} aria-hidden />
+      <span
+        className={cn("absolute inset-y-0 right-0 w-1", categoryStyles?.bar)}
+        style={tileStyles?.bar}
+        aria-hidden
+      />
       <button
         type="button"
         onClick={onSelect}
@@ -279,7 +282,13 @@ function ActivityCard({
             {activity.details}
           </div>
         ) : null}
-        <span className={cn("mt-1 inline-block rounded px-1.5 py-0.5 text-[10px]", styles.chip)}>
+        <span
+          className={cn(
+            "mt-1 inline-block rounded px-1.5 py-0.5 text-[10px]",
+            categoryStyles?.chip,
+          )}
+          style={tileStyles?.chip}
+        >
           {chipLabel}
         </span>
       </button>

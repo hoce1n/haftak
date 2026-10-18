@@ -12,6 +12,7 @@ import {
 import { dateKey, isDateInWeek, startOfWeek, type WeekStartDay } from "./jalali";
 import { loadData, normalizeData, saveData } from "./planner-storage";
 import {
+  addSavedTileColor,
   createId,
   defaultData,
   emptyWeek,
@@ -20,6 +21,7 @@ import {
   type Slot,
   type Tile,
   type TileCategory,
+  type TileCategoryColor,
   type WeekPlan,
 } from "./planner-types";
 
@@ -48,6 +50,7 @@ type PlannerContextValue = {
   addTileCategory: (category: Omit<TileCategory, "id">) => string;
   updateTileCategory: (id: string, patch: Partial<Omit<TileCategory, "id">>) => void;
   removeTileCategory: (id: string) => void;
+  saveTileColor: (color: TileCategoryColor) => void;
   setQuotes: (quotes: string[]) => void;
   clearWeek: () => void;
   restoreSnapshot: (snapshot: WeekPlan) => void;
@@ -203,6 +206,14 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
             },
           };
         }),
+      saveTileColor: (color) =>
+        setData((prev) => ({
+          ...prev,
+          settings: {
+            ...prev.settings,
+            savedTileColors: addSavedTileColor(prev.settings.savedTileColors, color),
+          },
+        })),
       setQuotes: (quotes) =>
         setData((prev) => ({ ...prev, settings: { ...prev.settings, quotes } })),
       clearWeek: () => mutateWeek((w) => ({ ...w, activities: [] })),
