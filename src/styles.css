@@ -380,6 +380,7 @@
   }
 
   .print-category-chip {
+    color: #000 !important;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
